@@ -13,7 +13,13 @@ class Checkpoint {
 
 class CheckpointScreen extends StatefulWidget {
   final String assetId;
-  const CheckpointScreen({super.key, required this.assetId});
+  final String assetName; // ✅ Add this
+
+  const CheckpointScreen({
+    super.key,
+    required this.assetId,
+    required this.assetName, // ✅ Accept assetName
+  });
 
   @override
   State<CheckpointScreen> createState() => _CheckpointScreenState();
@@ -49,6 +55,10 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
           children: [
             Text(
               "Asset ID: ${widget.assetId}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              "Asset Name: ${widget.assetName}",
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
@@ -110,7 +120,7 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // Here you can handle the form submission
+                  // You can save or submit data here
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Checklist submitted!')),
                   );
