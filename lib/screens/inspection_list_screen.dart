@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../data/mock_inspections.dart';
+import 'qr_scanner_screen.dart';
+import 'checkpoint_screen.dart';
 
 class InspectionListScreen extends StatelessWidget {
   const InspectionListScreen({super.key});
@@ -30,10 +32,25 @@ class InspectionListScreen extends StatelessWidget {
                   Text('Checked By: ${inspection.checkedBy}'),
                 ],
               ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                // Navigate to detail screen (optional)
-              },
+              trailing: IconButton(
+                icon: const Icon(Icons.qr_code_scanner),
+                onPressed: () async {
+                  final scannedAssetId = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const QRScannerScreen()),
+                  );
+
+                  if (scannedAssetId != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (_) => CheckpointScreen(assetId: scannedAssetId),
+                      ),
+                    );
+                  }
+                },
+              ),
             ),
           );
         },

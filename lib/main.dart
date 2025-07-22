@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/inspection_list_screen.dart';
+import 'screens/qr_scanner_screen.dart';
+import 'screens/checkpoint_screen.dart';
 
 void main() {
   runApp(const ProfimInspectionApp());

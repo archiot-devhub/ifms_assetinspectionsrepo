@@ -18,7 +18,7 @@ final List<Inspection> mockInspections = [
     assetName: 'Water Cooled Chiller',
     checklistId: 'CL014',
     checkingDate: DateTime(2025, 8, 10),
-    status: 'Scheduled',
+    status: 'Not Submitted',
     checkedBy: 'Ramesh',
   ),
   Inspection(
