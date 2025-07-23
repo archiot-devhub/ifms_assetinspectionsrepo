@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../data/mock_inspections.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../models/AssignedChecklist.dart';
 import 'qr_scanner_screen.dart';
 import 'checkpoint_screen.dart';
 import 'login_screen.dart';
@@ -16,14 +18,44 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
   String searchQuery = '';
   String? selectedStatus;
 
-  // Sample user info (replace later with login logic)
   final String username = 'adspl1005';
   final String role = 'Technician';
+
+  List<AssignedChecklist> inspections = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchInspections();
+  }
+
+  Future<void> fetchInspections() async {
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('AssignedChecklists')
+              .get();
+
+      setState(() {
+        inspections =
+            querySnapshot.docs
+                .map((doc) => AssignedChecklist.fromMap(doc.data()))
+                .toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching inspections: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final filteredInspections =
-        mockInspections.where((inspection) {
+        inspections.where((inspection) {
           final matchesSearch =
               inspection.assetName.toLowerCase().contains(
                 searchQuery.toLowerCase(),
@@ -83,7 +115,6 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 if (constraints.maxWidth < 400) {
-                  // For small screens (phones)
                   return Column(
                     children: [
                       TextField(
@@ -125,7 +156,6 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
                     ],
                   );
                 } else {
-                  // For larger screens (tablets/desktops)
                   return Row(
                     children: [
                       Expanded(
@@ -177,71 +207,76 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: filteredInspections.length,
-              itemBuilder: (context, index) {
-                final inspection = filteredInspections[index];
+            child:
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                      itemCount: filteredInspections.length,
+                      itemBuilder: (context, index) {
+                        final inspection = filteredInspections[index];
 
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 6,
-                    horizontal: 10,
-                  ),
-                  elevation: 3,
-                  child: ListTile(
-                    leading: const Icon(Icons.assignment),
-                    title: Text(
-                      '${inspection.assetName} (${inspection.assetId})',
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Checklist: ${inspection.checklistId}'),
-                        Text(
-                          'Date: ${DateFormat('dd-MM-yyyy').format(inspection.checkingDate)}',
-                        ),
-                        Text(
-                          'Status: ${inspection.status}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color:
-                                inspection.status == 'Submitted'
-                                    ? Colors.green
-                                    : Colors.red,
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                            vertical: 6,
+                            horizontal: 10,
                           ),
-                        ),
-                        Text('Checked By: ${inspection.checkedBy}'),
-                      ],
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.qr_code_scanner),
-                      onPressed: () async {
-                        final scannedAssetId = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const QRScannerScreen(),
+                          elevation: 3,
+                          child: ListTile(
+                            leading: const Icon(Icons.assignment),
+                            title: Text(
+                              '${inspection.assetName} (${inspection.assetId})',
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Date: ${DateFormat('dd-MM-yyyy').format(inspection.scheduledDate)}',
+                                ),
+                                Text(
+                                  'Status: ${inspection.status}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        inspection.status == 'Submitted'
+                                            ? Colors.green
+                                            : Colors.red,
+                                  ),
+                                ),
+                                Text('Checked By: ${inspection.checkedBy}'),
+                              ],
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.qr_code_scanner),
+                              onPressed: () async {
+                                final scannedAssetId = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const QRScannerScreen(),
+                                  ),
+                                );
+
+                                if (scannedAssetId != null &&
+                                    scannedAssetId
+                                        .toString()
+                                        .trim()
+                                        .isNotEmpty) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => CheckpointScreen(
+                                            assetId: scannedAssetId,
+                                            assetName: inspection.assetName,
+                                          ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
                           ),
                         );
-
-                        if (scannedAssetId != null &&
-                            scannedAssetId.toString().trim().isNotEmpty) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (_) => CheckpointScreen(
-                                    assetId: scannedAssetId,
-                                    assetName: inspection.assetName,
-                                  ),
-                            ),
-                          );
-                        }
                       },
                     ),
-                  ),
-                );
-              },
-            ),
           ),
         ],
       ),
