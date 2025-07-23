@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../data/mock_inspections.dart';
 import 'qr_scanner_screen.dart';
 import 'checkpoint_screen.dart';
+import 'login_screen.dart';
 
 class InspectionListScreen extends StatefulWidget {
   const InspectionListScreen({super.key});
@@ -14,6 +15,10 @@ class InspectionListScreen extends StatefulWidget {
 class _InspectionListScreenState extends State<InspectionListScreen> {
   String searchQuery = '';
   String? selectedStatus;
+
+  // Sample user info (replace later with login logic)
+  final String username = 'adspl1005';
+  final String role = 'Technician';
 
   @override
   Widget build(BuildContext context) {
@@ -36,55 +41,139 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
         }).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Inspections')),
+      appBar: AppBar(
+        title: const Text('Inspections'),
+        leading: IconButton(
+          icon: const Icon(Icons.logout),
+          tooltip: 'Back to Login',
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+            );
+          },
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  username,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  role,
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(10),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      hintText: 'Search by Asset ID or Name',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.search),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        searchQuery = value;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: selectedStatus,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Status',
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'All', child: Text('All')),
-                      DropdownMenuItem(
-                        value: 'Submitted',
-                        child: Text('Submitted'),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < 400) {
+                  // For small screens (phones)
+                  return Column(
+                    children: [
+                      TextField(
+                        decoration: const InputDecoration(
+                          hintText: 'Search by Asset ID or Name',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.search),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            searchQuery = value;
+                          });
+                        },
                       ),
-                      DropdownMenuItem(
-                        value: 'Not Submitted',
-                        child: Text('Not Submitted'),
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<String>(
+                        value: selectedStatus,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Status',
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'All', child: Text('All')),
+                          DropdownMenuItem(
+                            value: 'Submitted',
+                            child: Text('Submitted'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Not Submitted',
+                            child: Text('Not Submitted'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            selectedStatus = value;
+                          });
+                        },
                       ),
                     ],
-                    onChanged: (value) {
-                      setState(() {
-                        selectedStatus = value;
-                      });
-                    },
-                  ),
-                ),
-              ],
+                  );
+                } else {
+                  // For larger screens (tablets/desktops)
+                  return Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            hintText: 'Search by Asset ID or Name',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.search),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              searchQuery = value;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        flex: 1,
+                        child: DropdownButtonFormField<String>(
+                          value: selectedStatus,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Status',
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'All', child: Text('All')),
+                            DropdownMenuItem(
+                              value: 'Submitted',
+                              child: Text('Submitted'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Not Submitted',
+                              child: Text('Not Submitted'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              selectedStatus = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              },
             ),
           ),
           Expanded(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'inspection_list_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -9,30 +11,29 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
-  void _login() async {
+  Future<void> login() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
 
-      await Future.delayed(const Duration(seconds: 1)); // Mock login delay
-
-      setState(() => _isLoading = false);
-
-      // You can replace this with real authentication logic
-      if (_emailController.text == "ADSPL1005" &&
-          _passwordController.text == "password") {
+        Fluttertoast.showToast(msg: 'Login Successful');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const InspectionListScreen()),
         );
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Invalid credentials")));
+      } on FirebaseAuthException catch (e) {
+        Fluttertoast.showToast(msg: 'Login failed: ${e.message}');
+      } finally {
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -56,14 +57,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 30),
                 TextFormField(
-                  controller: _emailController,
+                  controller: emailController,
                   decoration: const InputDecoration(labelText: 'Email'),
                   validator:
                       (value) => value!.isEmpty ? 'Enter your email' : null,
                 ),
                 const SizedBox(height: 15),
                 TextFormField(
-                  controller: _passwordController,
+                  controller: passwordController,
                   decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
                   validator:
@@ -73,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ElevatedButton(
-                      onPressed: _login,
+                      onPressed: login,
                       child: const Text("Login"),
                     ),
               ],

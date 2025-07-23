@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1032703088391",
+    "project_id": "profim-518d6",
+    "storage_bucket": "profim-518d6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1032703088391:android:451bf8a27b6b2f127ed7a2",
+        "android_client_info": {
+          "package_name": "com.example.profiminspectionapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeoDu0_VNF0oQEbTaJzf960dgI2NtS0Ws"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
