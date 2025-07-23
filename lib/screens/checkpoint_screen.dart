@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
-import '../models/checkpoint.dart'; // ✅ Import your model
+import '../models/checkpoint.dart'; // ✅ Your model should have: checkpointID, checkpoint, inputType, response, remarks, image
 
 class CheckpointScreen extends StatefulWidget {
   final String assetId;
   final String assetName;
+  final String inspectionId;
 
   const CheckpointScreen({
     super.key,
     required this.assetId,
     required this.assetName,
+    required this.inspectionId,
   });
 
   @override
@@ -55,13 +58,58 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
     }
   }
 
-  void _submitChecklist() {
-    // TODO: Save each checkpoint to SubmittedCheckpoints Firestore collection
-    // TODO: Update AssignedChecklists (status = Completed)
+  Future<void> _submitChecklist() async {
+    final firestore = FirebaseFirestore.instance;
+    final storage = FirebaseStorage.instance;
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Checklist submitted!')));
+    try {
+      for (var cp in checkpoints) {
+        String? imageUrl;
+
+        // ✅ Upload image if exists
+        if (cp.image != null) {
+          final fileName = '${widget.inspectionId}_${cp.checkpointID}.jpg';
+          final ref = storage.ref().child('checkpoint_images/$fileName');
+          final uploadTask = await ref.putFile(cp.image!);
+          imageUrl = await uploadTask.ref.getDownloadURL();
+        }
+
+        // ✅ Save to SubmittedCheckpoints
+        await firestore.collection('SubmittedCheckpoints').add({
+          'inspectionID': widget.inspectionId,
+          'assetID': widget.assetId,
+          'assetName': widget.assetName,
+          'checkpointID': cp.checkpointID,
+          'checkpoint': cp.checkpoint,
+          'response': cp.response ?? '',
+          'remarks': cp.remarks ?? '',
+          'imageUrl': imageUrl ?? '',
+          'submittedDate': Timestamp.now(),
+        });
+      }
+
+      // ✅ Update AssignedChecklists status to 'Submitted'
+      final assignedSnap =
+          await firestore
+              .collection('AssignedChecklists')
+              .where('inspectionId', isEqualTo: widget.inspectionId)
+              .limit(1)
+              .get();
+
+      if (assignedSnap.docs.isNotEmpty) {
+        await assignedSnap.docs.first.reference.update({'status': 'Submitted'});
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Checklist submitted successfully!')),
+      );
+
+      Navigator.pop(context); // Optional: go back
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+    }
   }
 
   @override

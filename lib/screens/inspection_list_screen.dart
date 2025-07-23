@@ -267,6 +267,8 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
                                           (_) => CheckpointScreen(
                                             assetId: scannedAssetId,
                                             assetName: inspection.assetName,
+                                            inspectionId:
+                                                inspection.inspectionId,
                                           ),
                                     ),
                                   );
