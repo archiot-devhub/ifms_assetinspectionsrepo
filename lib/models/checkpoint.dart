@@ -7,6 +7,7 @@ class Checkpoint {
   String? response;
   String? remarks;
   File? image;
+  String? submittedBy; // ✅ New field
 
   Checkpoint({
     required this.checkpointID,
@@ -15,6 +16,7 @@ class Checkpoint {
     this.response,
     this.remarks,
     this.image,
+    this.submittedBy, // ✅ Include in constructor
   });
 
   // Factory constructor to create from Firestore
@@ -23,6 +25,9 @@ class Checkpoint {
       checkpointID: data['checkpointID'] ?? '',
       checkpoint: data['checkpoint'] ?? '',
       inputType: data['inputType'] ?? 'radio',
+      response: data['response'], // Optional: in case it's being fetched
+      remarks: data['remarks'], // Optional
+      submittedBy: data['submittedBy'], // ✅ New field from Firestore
     );
   }
 
@@ -34,7 +39,8 @@ class Checkpoint {
       'inputType': inputType,
       'response': response,
       'remarks': remarks,
-      // 'image' is excluded from this map; it's stored in Firebase Storage
+      'submittedBy': submittedBy, // ✅ Include in map for Firestore write
+      // 'image' is not stored in Firestore
     };
   }
 }

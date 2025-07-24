@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'success_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/checkpoint.dart'; // ✅ Your model should have: checkpointID, checkpoint, inputType, response, remarks, image
 
@@ -62,6 +63,8 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
   Future<void> _submitChecklist() async {
     final firestore = FirebaseFirestore.instance;
     final storage = FirebaseStorage.instance;
+    final user = FirebaseAuth.instance.currentUser;
+    final submittedBy = user?.email ?? 'Unknown User';
 
     try {
       for (var cp in checkpoints) {
@@ -86,6 +89,7 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
           'remarks': cp.remarks ?? '',
           'imageUrl': imageUrl ?? '',
           'submittedDate': Timestamp.now(),
+          'submittedBy': submittedBy,
         });
       }
 

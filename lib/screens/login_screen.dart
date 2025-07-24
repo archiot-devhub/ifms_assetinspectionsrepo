@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'inspection_list_screen.dart';
+import 'ModuleSelectionScreen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Fluttertoast.showToast(msg: 'Login Successful');
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const InspectionListScreen()),
+          MaterialPageRoute(builder: (_) => const ModuleSelectionScreen()),
         );
       } on FirebaseAuthException catch (e) {
         Fluttertoast.showToast(msg: 'Login failed: ${e.message}');
