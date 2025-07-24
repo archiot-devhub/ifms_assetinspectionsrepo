@@ -6,6 +6,7 @@ import '../models/AssignedChecklist.dart';
 import 'qr_scanner_screen.dart';
 import 'checkpoint_screen.dart';
 import 'login_screen.dart';
+import 'SubmittedCheckpointsScreen.dart';
 
 class InspectionListScreen extends StatefulWidget {
   const InspectionListScreen({super.key});
@@ -23,11 +24,21 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
 
   List<AssignedChecklist> inspections = [];
   bool isLoading = true;
+  bool _isFirstLoad = true;
 
   @override
   void initState() {
     super.initState();
     fetchInspections();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isFirstLoad) {
+      fetchInspections(); // Refresh when coming back to screen
+    }
+    _isFirstLoad = false;
   }
 
   Future<void> fetchInspections() async {
@@ -115,19 +126,37 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 if (constraints.maxWidth < 400) {
+                  // Mobile View
                   return Column(
                     children: [
-                      TextField(
-                        decoration: const InputDecoration(
-                          hintText: 'Search by Asset ID or Name',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.search),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            searchQuery = value;
-                          });
-                        },
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              decoration: const InputDecoration(
+                                hintText: 'Search by Asset ID or Name',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.search),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  searchQuery = value;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          IconButton(
+                            icon: const Icon(Icons.refresh),
+                            tooltip: 'Reload Inspections',
+                            onPressed: () {
+                              setState(() {
+                                isLoading = true;
+                              });
+                              fetchInspections();
+                            },
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 10),
                       DropdownButtonFormField<String>(
@@ -156,21 +185,39 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
                     ],
                   );
                 } else {
+                  // Desktop View
                   return Row(
                     children: [
                       Expanded(
                         flex: 2,
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            hintText: 'Search by Asset ID or Name',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.search),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              searchQuery = value;
-                            });
-                          },
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                decoration: const InputDecoration(
+                                  hintText: 'Search by Asset ID or Name',
+                                  border: OutlineInputBorder(),
+                                  prefixIcon: Icon(Icons.search),
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    searchQuery = value;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            IconButton(
+                              icon: const Icon(Icons.refresh),
+                              tooltip: 'Reload Inspections',
+                              onPressed: () {
+                                setState(() {
+                                  isLoading = true;
+                                });
+                                fetchInspections();
+                              },
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -246,32 +293,57 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
                               ],
                             ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.qr_code_scanner),
+                              icon: Icon(
+                                inspection.status == 'Submitted'
+                                    ? Icons.visibility
+                                    : Icons.qr_code_scanner,
+                                color:
+                                    inspection.status == 'Submitted'
+                                        ? Colors.blue
+                                        : null,
+                              ),
+                              tooltip:
+                                  inspection.status == 'Submitted'
+                                      ? 'View Details'
+                                      : 'Scan QR',
                               onPressed: () async {
-                                final scannedAssetId = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const QRScannerScreen(),
-                                  ),
-                                );
-
-                                if (scannedAssetId != null &&
-                                    scannedAssetId
-                                        .toString()
-                                        .trim()
-                                        .isNotEmpty) {
+                                if (inspection.status == 'Submitted') {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (_) => CheckpointScreen(
-                                            assetId: scannedAssetId,
-                                            assetName: inspection.assetName,
+                                          (_) => SubmittedCheckpointsScreen(
                                             inspectionId:
                                                 inspection.inspectionId,
                                           ),
                                     ),
                                   );
+                                } else {
+                                  final scannedAssetId = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const QRScannerScreen(),
+                                    ),
+                                  );
+
+                                  if (scannedAssetId != null &&
+                                      scannedAssetId
+                                          .toString()
+                                          .trim()
+                                          .isNotEmpty) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => CheckpointScreen(
+                                              assetId: scannedAssetId,
+                                              assetName: inspection.assetName,
+                                              inspectionId:
+                                                  inspection.inspectionId,
+                                            ),
+                                      ),
+                                    );
+                                  }
                                 }
                               },
                             ),

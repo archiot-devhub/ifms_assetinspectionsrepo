@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'success_screen.dart';
 
 import '../models/checkpoint.dart'; // ✅ Your model should have: checkpointID, checkpoint, inputType, response, remarks, image
 
@@ -100,11 +101,11 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
         await assignedSnap.docs.first.reference.update({'status': 'Submitted'});
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Checklist submitted successfully!')),
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const SuccessScreen()),
       );
-
-      Navigator.pop(context); // Optional: go back
+      // instead of just Navigator.pop(context)
     } catch (e) {
       ScaffoldMessenger.of(
         context,
