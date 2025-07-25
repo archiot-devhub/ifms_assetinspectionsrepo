@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/assigned_inspection_checklist.dart';
 import 'general_checkpoint_submission_screen.dart';
+import 'generalsubmittedcheckpointsscreen.dart'; // ✅ Add this line
 
 class GeneralInspectionListScreen extends StatefulWidget {
   const GeneralInspectionListScreen({super.key});
@@ -86,7 +87,7 @@ class _GeneralInspectionListScreenState
   }
 
   IconData getTrailingIcon(String status) {
-    return status.toLowerCase() == 'completed'
+    return status.toLowerCase() == 'Completed'
         ? Icons.remove_red_eye
         : Icons.assignment;
   }
@@ -100,7 +101,7 @@ class _GeneralInspectionListScreenState
               ? const Center(child: CircularProgressIndicator())
               : Column(
                 children: [
-                  // 🔍 Search Bar & Reload
+                  // 🔍 Search & Reload
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -176,6 +177,7 @@ class _GeneralInspectionListScreenState
                               itemCount: filteredInspections.length,
                               itemBuilder: (context, index) {
                                 final item = filteredInspections[index];
+
                                 return Card(
                                   elevation: 3,
                                   margin: const EdgeInsets.symmetric(
@@ -202,7 +204,6 @@ class _GeneralInspectionListScreenState
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-
                                         Text('Remarks: ${item.remarks ?? "-"}'),
                                         Text(
                                           'Completed On: ${item.completedOn != null ? item.completedOn!.toLocal().toString().split(' ')[0] : "-"}',
@@ -226,7 +227,19 @@ class _GeneralInspectionListScreenState
                                       onPressed: () {
                                         if (item.status.toLowerCase() ==
                                             'completed') {
-                                          // TODO: Navigate to view submitted checklist
+                                          // ✅ Navigate to general submitted checkpoints screen
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) =>
+                                                      GeneralSubmittedCheckpointsScreen(
+                                                        inspectionId:
+                                                            item.inspectionID,
+                                                        category: item.category,
+                                                      ),
+                                            ),
+                                          );
                                         } else {
                                           Navigator.push(
                                             context,

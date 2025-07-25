@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../models/checkpoint.dart';
-import 'success_screen.dart';
+import 'general_success_screen.dart';
 
 class GeneralCheckpointSubmissionScreen extends StatefulWidget {
   final String inspectionID;
@@ -123,7 +123,7 @@ class _GeneralCheckpointSubmissionScreenState
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const SuccessScreen()),
+          MaterialPageRoute(builder: (_) => const GeneralSuccessScreen()),
         );
       }
     } catch (e) {
