@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'inspection_list_screen.dart';
-import 'ModuleSelectionScreen.dart';
+import '../core/core_modules_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Fluttertoast.showToast(msg: 'Login Successful');
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const ModuleSelectionScreen()),
+          MaterialPageRoute(builder: (_) => const CoreModulesScreen()),
         );
       } on FirebaseAuthException catch (e) {
         Fluttertoast.showToast(msg: 'Login failed: ${e.message}');
@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
               shrinkWrap: true,
               children: [
                 const Text(
-                  "PROFIM ASSET INSPECTION APP",
+                  "PROFIM APP",
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),

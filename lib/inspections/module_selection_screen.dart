@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'inspection_list_screen.dart'; // Your existing Asset Inspection screen
-import 'general_inspection_list_screen.dart'; // To be created
+import '../screens/inspection_list_screen.dart'; // Your existing Asset Inspection screen
+import '../screens/general_inspection_list_screen.dart'; // To be created
 
 class ModuleSelectionScreen extends StatelessWidget {
   const ModuleSelectionScreen({super.key});
