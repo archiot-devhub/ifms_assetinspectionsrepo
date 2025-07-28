@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../maintenance/maintenance_home_screen.dart';
 import '../inspections/module_selection_screen.dart';
 import '../assets/asset_register_screen.dart';
+import '../maintenance/maintenance_schedule_screen.dart';
 
 class CoreModulesScreen extends StatelessWidget {
   const CoreModulesScreen({super.key});
@@ -17,7 +18,7 @@ class CoreModulesScreen extends StatelessWidget {
       {
         'title': 'Maintenance',
         'icon': Icons.build_circle_outlined,
-        'screen': const MaintenanceHomeScreen(),
+        'screen': const MaintenanceScheduleScreen(),
       },
       {
         'title': 'Inspections',
