@@ -9,8 +9,8 @@ class AssetDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final assetImageUrl = assetData['imageUrl'] ?? '';
-    final assetName = assetData['assetname'] ?? 'Asset Details';
+    final assetImageUrl = assetData.get('imageUrl') ?? '';
+    final assetName = assetData.get('assetname') ?? 'Asset Details';
 
     return Scaffold(
       appBar: AppBar(title: Text(assetName)),
@@ -55,22 +55,26 @@ class AssetDetailScreen extends StatelessWidget {
         Wrap(
           runSpacing: 12,
           children: [
-            infoRow('Asset ID', assetData['assetID']),
-            infoRow('Asset Name', assetData['assetname']),
-            infoRow('Asset Group', assetData['assetgroup']),
-            infoRow('Project', assetData['project']),
-            infoRow('Location ID', assetData['locationID']),
-            infoRow('Condition', assetData['condition']),
-            infoRow('Status', assetData['status']),
-            infoRow('Criticality', assetData['criticality']),
-            infoRow('Manufacturer', assetData['manufacturer']),
-            infoRow('Model Number', assetData['modelnumber']),
-            infoRow('Serial Number', assetData['serialnumber']),
-            infoRow('Power Spec', assetData['powerspecification']),
+            infoRow('Asset ID', assetData.get('assetID') ?? ''),
+            infoRow('Asset Name', assetData.get('assetname') ?? ''),
+            infoRow('Asset Group', assetData.get('assetgroup') ?? ''),
+            infoRow('Project', assetData.get('project') ?? ''),
+            infoRow('Location ID', assetData.get('locationID') ?? ''),
+            infoRow('Condition', assetData.get('condition') ?? ''),
+            infoRow('Status', assetData.get('status') ?? ''),
+            infoRow('Criticality', assetData.get('criticality') ?? ''),
+            infoRow('Manufacturer', assetData.get('manufacturer') ?? ''),
+            infoRow('Model Number', assetData.get('modelnumber') ?? ''),
+            infoRow('Serial Number', assetData.get('serialnumber') ?? ''),
+            infoRow(
+              'Power Specification',
+              assetData.get('powerspecification') ?? '',
+            ),
             infoRow(
               'Technical Classification',
-              assetData['technicalclassification'],
+              assetData.get('technicalclassification') ?? '',
             ),
+            infoRow('Description', assetData.get('description') ?? ''),
           ],
         ),
         const SizedBox(height: 30),
@@ -81,9 +85,12 @@ class AssetDetailScreen extends StatelessWidget {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
-        documentTile('Asset Manual', assetData['manualUrl']),
-        documentTile('Warranty Certificate', assetData['warrantyUrl']),
-        documentTile('Invoice', assetData['invoiceUrl']),
+        documentTile('Asset Manual', assetData.get('manualUrl') ?? ''),
+        documentTile(
+          'Warranty Certificate',
+          assetData.get('warrantyUrl') ?? '',
+        ),
+        documentTile('Invoice', assetData.get('invoiceUrl') ?? ''),
       ],
     );
   }
@@ -137,7 +144,7 @@ class AssetDetailScreen extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              value.isNotEmpty ? value : '-',
+              value.trim().isNotEmpty ? value : '-',
               style: const TextStyle(fontSize: 15),
             ),
           ),
@@ -146,20 +153,23 @@ class AssetDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget documentTile(String title, String? url) {
+  Widget documentTile(String title, String url) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: ListTile(
         leading: const Icon(Icons.description),
         title: Text(title),
         trailing:
-            url != null && url.isNotEmpty
+            url.trim().isNotEmpty
                 ? IconButton(
                   icon: const Icon(Icons.open_in_new),
                   onPressed: () async {
                     final uri = Uri.parse(url);
                     if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri);
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
                     }
                   },
                 )

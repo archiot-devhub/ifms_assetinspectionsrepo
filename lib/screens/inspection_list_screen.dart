@@ -7,6 +7,7 @@ import 'qr_scanner_screen.dart';
 import 'checkpoint_screen.dart';
 import 'login_screen.dart';
 import 'SubmittedCheckpointsScreen.dart';
+import '../inspections/module_selection_screen.dart';
 
 class InspectionListScreen extends StatefulWidget {
   const InspectionListScreen({super.key});
@@ -87,15 +88,16 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
       appBar: AppBar(
         title: const Text('Inspections'),
         leading: IconButton(
-          icon: const Icon(Icons.logout),
-          tooltip: 'Back to Login',
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back to Modules',
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              MaterialPageRoute(builder: (_) => const ModuleSelectionScreen()),
             );
           },
         ),
+
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),

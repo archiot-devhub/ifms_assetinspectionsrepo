@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'inspection_list_screen.dart';
 import '../core/core_modules_screen.dart';
 
 class LoginScreen extends StatefulWidget {

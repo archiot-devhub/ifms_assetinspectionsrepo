@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'asset_detail_screen.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:csv/csv.dart';
 import 'package:open_file/open_file.dart';
+import 'bulk_upload_asset_screen.dart';
 import 'dart:io';
 
 class AssetRegisterScreen extends StatefulWidget {
@@ -404,6 +404,18 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
       appBar: AppBar(
         title: const Text('Asset Register'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.file_upload),
+            tooltip: 'Bulk Upload',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const BulkUploadAssetScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.download),
             tooltip: 'Export to CSV',
