@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/AssignedChecklist.dart';
 import 'qr_scanner_screen.dart';
 import 'checkpoint_screen.dart';
-import 'login_screen.dart';
 import 'SubmittedCheckpointsScreen.dart';
 import '../inspections/module_selection_screen.dart';
 

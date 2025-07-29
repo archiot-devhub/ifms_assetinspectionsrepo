@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'asset_detail_screen.dart';
+// Make sure the import path is correct and AssetDetailScreen is defined in this file.
 import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:open_file/open_file.dart';
@@ -16,22 +17,6 @@ class AssetRegisterScreen extends StatefulWidget {
 }
 
 class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
-  List<Map<String, dynamic>> _assets = [];
-
-  @override
-  void initState() {
-    super.initState();
-    fetchAssets(); // 🔹 Call the function to load Firestore data
-  }
-
-  Future<void> fetchAssets() async {
-    final snapshot =
-        await FirebaseFirestore.instance.collection('AssetRegister').get();
-    setState(() {
-      _assets = snapshot.docs.map((doc) => doc.data()).toList();
-    });
-  }
-
   String searchText = '';
   String selectedCondition = 'All';
   String selectedStatus = 'All';
@@ -43,17 +28,11 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
     'Under Maintenance',
     'Degrading',
   ];
-
   final List<String> statusOptions = ['All', 'Active', 'Inactive'];
 
-  Future<void> _refreshAssets() async {
-    setState(() {});
-  }
-
-  Future<void> _exportToCSV(List<Map<String, dynamic>> assetList) async {
+  Future<void> _exportToCSV(List<QueryDocumentSnapshot> docs) async {
     try {
       List<List<dynamic>> rows = [];
-
       rows.add([
         'Asset ID',
         'Asset Name',
@@ -74,9 +53,10 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
         'Elapsed Life',
         'Useful Life',
         'Installation Date',
+        'Location',
       ]);
-
-      for (var data in assetList) {
+      for (var doc in docs) {
+        final data = doc.data() as Map<String, dynamic>;
         rows.add([
           data['assetID'] ?? '',
           data['assetname'] ?? '',
@@ -90,7 +70,9 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
           data['purchasecost'] ?? '',
           data['vendorname'] ?? '',
           data['purchasedate'] is Timestamp
-              ? data['purchasedate']?.toDate().toString() ?? ''
+              ? DateFormat(
+                'yyyy-MM-dd',
+              ).format((data['purchasedate'] as Timestamp).toDate())
               : data['purchasedate']?.toString() ?? '',
           data['replacementcost'] ?? '',
           data['depreciationrate'] ?? '',
@@ -99,35 +81,28 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
           data['elapsedlife'] ?? '',
           data['usefullife'] ?? '',
           data['installationdate'] is Timestamp
-              ? data['installationdate']?.toDate().toString() ?? ''
+              ? DateFormat(
+                'yyyy-MM-dd',
+              ).format((data['installationdate'] as Timestamp).toDate())
               : data['installationdate']?.toString() ?? '',
+          data['locationID'] ?? '',
         ]);
       }
-
       String csvData = const ListToCsvConverter().convert(rows);
-
-      // Get download directory
-      Directory? downloadsDir;
+      Directory? dir;
       if (Platform.isAndroid) {
-        downloadsDir = await getExternalStorageDirectory(); // App directory
+        dir = await getExternalStorageDirectory();
       } else {
-        downloadsDir = await getApplicationDocumentsDirectory(); // iOS safe
+        dir = await getApplicationDocumentsDirectory();
       }
-
-      final now = DateTime.now();
-      final fileName =
-          'asset_register_${DateFormat('yyyyMMdd_HHmmss').format(now)}.csv';
-      final filePath = '${downloadsDir!.path}/$fileName';
-
+      final filePath =
+          '${dir!.path}/asset_register_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
       final file = File(filePath);
       await file.writeAsString(csvData);
-
-      // Open the file
       await OpenFile.open(filePath);
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('CSV downloaded and opened')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('CSV downloaded and opened')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -174,10 +149,7 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Key Details',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          _sectionHeader('Key Details'),
                           _buildTextField('assetID', assetData),
                           _buildTextField('assetname', assetData),
                           _buildTextField('assetgroup', assetData),
@@ -185,20 +157,14 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                           _buildTextField('condition', assetData),
 
                           const SizedBox(height: 12),
-                          const Text(
-                            'Technical Details',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          _sectionHeader('Technical Details'),
                           _buildTextField('technicalclassification', assetData),
                           _buildTextField('serialnumber', assetData),
                           _buildTextField('modelnumber', assetData),
                           _buildTextField('manufacturer', assetData),
 
                           const SizedBox(height: 12),
-                          const Text(
-                            'Financial Details',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          _sectionHeader('Financial Details'),
                           _buildTextField(
                             'purchasecost',
                             assetData,
@@ -228,10 +194,7 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                           ),
 
                           const SizedBox(height: 12),
-                          const Text(
-                            'Lifecycle Details',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          _sectionHeader('Lifecycle Details'),
                           _buildTextField(
                             'elapsedlife',
                             assetData,
@@ -257,6 +220,7 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                           .collection('AssetRegister')
                           .add(assetData);
                       Navigator.pop(context);
+                      setState(() {}); // Refresh after adding
                     }
                   },
                   child: const Text('Add Asset'),
@@ -266,6 +230,17 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
           ),
         );
       },
+    );
+  }
+
+  // Section header widget
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        title,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
     );
   }
 
@@ -293,38 +268,39 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
     TextEditingController controller = TextEditingController();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: TextFormField(
-        controller: controller,
-        readOnly: true,
-        decoration: InputDecoration(labelText: label),
-        onTap: () async {
-          final pickedDate = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
+      child: Builder(
+        builder: (context) {
+          return TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: label,
+              suffixIcon: const Icon(Icons.calendar_today),
+            ),
+            readOnly: true,
+            onTap: () async {
+              DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(1900),
+                lastDate: DateTime(2100),
+              );
+              if (picked != null) {
+                controller.text = DateFormat('yyyy-MM-dd').format(picked);
+                assetData[label] = Timestamp.fromDate(picked);
+              }
+            },
+            validator:
+                (value) => value == null || value.isEmpty ? 'Required' : null,
+            onSaved: (value) {
+              if (value != null && value.isNotEmpty) {
+                DateTime? date = DateTime.tryParse(value);
+                if (date != null) {
+                  assetData[label] = Timestamp.fromDate(date);
+                }
+              }
+            },
           );
-          if (pickedDate != null) {
-            controller.text = DateFormat('yyyy-MM-dd').format(pickedDate);
-            assetData[label] = pickedDate;
-          }
         },
-        validator:
-            (value) => value == null || value.isEmpty ? 'Required' : null,
-      ),
-    );
-  }
-
-  Widget _sectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16.0, bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.blueGrey,
-        ),
       ),
     );
   }
@@ -332,7 +308,6 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
   void _showEditPopup(DocumentSnapshot asset) {
     String condition = asset['condition'];
     String status = asset['status'];
-
     showDialog(
       context: context,
       builder: (context) {
@@ -398,24 +373,57 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
     );
   }
 
+  Color _conditionDotColor(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'working':
+        return Colors.green;
+      case 'breakdown':
+        return Colors.red;
+      case 'degrading':
+        return Colors.purple;
+      case 'under maintenance':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color _conditionPillColor(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'working':
+        return Colors.green.shade50;
+      case 'breakdown':
+        return Colors.red.shade50;
+      case 'under maintenance':
+        return Colors.orange.shade50;
+      case 'degrading':
+        return Colors.purple.shade50;
+      default:
+        return Colors.grey.shade200;
+    }
+  }
+
+  Color _conditionPillTextColor(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'working':
+        return Colors.green.shade700;
+      case 'breakdown':
+        return Colors.red.shade700;
+      case 'under maintenance':
+        return Colors.orange.shade700;
+      case 'degrading':
+        return Colors.purple.shade700;
+      default:
+        return Colors.grey.shade600;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Asset Register'),
+        title: const Text('Asset Management'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.file_upload),
-            tooltip: 'Bulk Upload',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const BulkUploadAssetScreen(),
-                ),
-              );
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.download),
             tooltip: 'Export to CSV',
@@ -424,83 +432,87 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                   await FirebaseFirestore.instance
                       .collection('AssetRegister')
                       .get();
-              await _exportToCSV(
-                snapshot.docs.map((doc) => doc.data()).toList(),
-              );
+              await _exportToCSV(snapshot.docs);
             },
           ),
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Add New Asset',
+            tooltip: 'Add Asset',
             onPressed: _showAddAssetPopup,
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              children: [
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Search by Asset Name or ID',
-                    prefixIcon: Icon(Icons.search),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 12.0,
+                horizontal: 16.0,
+              ),
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: const InputDecoration(
+                      labelText: 'Search by Asset Name or ID',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged:
+                        (value) =>
+                            setState(() => searchText = value.toLowerCase()),
                   ),
-                  onChanged: (value) {
-                    setState(() => searchText = value.toLowerCase());
-                  },
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: selectedCondition,
-                        items:
-                            conditionOptions
-                                .map(
-                                  (c) => DropdownMenuItem(
-                                    value: c,
-                                    child: Text(c),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged:
-                            (value) =>
-                                setState(() => selectedCondition = value!),
-                        decoration: const InputDecoration(
-                          labelText: 'Condition',
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedCondition,
+                          items:
+                              conditionOptions
+                                  .map(
+                                    (c) => DropdownMenuItem(
+                                      value: c,
+                                      child: Text(c),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged:
+                              (value) =>
+                                  setState(() => selectedCondition = value!),
+                          decoration: const InputDecoration(
+                            labelText: 'Condition',
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: selectedStatus,
-                        items:
-                            statusOptions
-                                .map(
-                                  (s) => DropdownMenuItem(
-                                    value: s,
-                                    child: Text(s),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged:
-                            (value) => setState(() => selectedStatus = value!),
-                        decoration: const InputDecoration(labelText: 'Status'),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedStatus,
+                          items:
+                              statusOptions
+                                  .map(
+                                    (s) => DropdownMenuItem(
+                                      value: s,
+                                      child: Text(s),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged:
+                              (value) =>
+                                  setState(() => selectedStatus = value!),
+                          decoration: const InputDecoration(
+                            labelText: 'Status',
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Divider(),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refreshAssets,
+            const Divider(height: 1),
+            Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream:
                     FirebaseFirestore.instance
@@ -510,15 +522,15 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
-
                   final docs =
                       snapshot.data!.docs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
                         final assetName =
-                            doc['assetname'].toString().toLowerCase();
-                        final assetID = doc['assetID'].toString().toLowerCase();
-                        final condition = doc['condition'];
-                        final status = doc['status'];
-
+                            (data['assetname'] ?? '').toString().toLowerCase();
+                        final assetID =
+                            (data['assetID'] ?? '').toString().toLowerCase();
+                        final condition = (data['condition'] ?? '').toString();
+                        final status = (data['status'] ?? '').toString();
                         final matchesSearch =
                             assetName.contains(searchText) ||
                             assetID.contains(searchText);
@@ -527,57 +539,154 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                             condition == selectedCondition;
                         final matchesStatus =
                             selectedStatus == 'All' || status == selectedStatus;
-
                         return matchesSearch &&
                             matchesCondition &&
                             matchesStatus;
                       }).toList();
-
                   if (docs.isEmpty) {
                     return const Center(child: Text('No assets found.'));
                   }
-
                   return ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 8),
                     itemCount: docs.length,
-                    itemBuilder: (context, index) {
-                      final asset = docs[index];
+                    itemBuilder: (context, idx) {
+                      final doc = docs[idx];
+                      final data = doc.data() as Map<String, dynamic>;
+                      final condition = data['condition'] ?? '';
+                      final status = data['status'] ?? '';
                       return Card(
                         margin: const EdgeInsets.symmetric(
                           horizontal: 12,
-                          vertical: 6,
+                          vertical: 4,
                         ),
-                        child: ListTile(
-                          title: Text(asset['assetname']),
-                          subtitle: Column(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('ID: ${asset['assetID']}'),
-                              Text(
-                                'Status: ${asset['status']} | Condition: ${asset['condition']}',
+                              // Condition dot
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                child: CircleAvatar(
+                                  radius: 7,
+                                  backgroundColor: _conditionDotColor(
+                                    condition.toString(),
+                                  ),
+                                ),
                               ),
-                            ],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.visibility),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => AssetDetailScreen(
-                                            assetData: asset,
+                              // Main info
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => AssetDetailScreen(
+                                              assetData: doc,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${data['assetname'] ?? "--"}  (${data['assetID'] ?? "--"})',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blueAccent,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        "Group: ${data['assetgroup'] ?? '--'} | Location: ${data['locationID'] ?? '--'}",
+                                        style: const TextStyle(
+                                          fontSize: 11.5,
+                                          color: Colors.black87,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 1.5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  status == "Active"
+                                                      ? Colors.green.shade50
+                                                      : Colors.grey.shade200,
+                                              borderRadius:
+                                                  BorderRadius.circular(7),
+                                            ),
+                                            child: Text(
+                                              status,
+                                              style: TextStyle(
+                                                color:
+                                                    status == "Active"
+                                                        ? Colors.green
+                                                        : Colors.grey,
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
                                           ),
-                                    ),
-                                  );
-                                },
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () => _showEditPopup(asset),
+                              // Trailing - Condition pill + edit, compact
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 1.5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _conditionPillColor(
+                                        condition.toString(),
+                                      ),
+                                      borderRadius: BorderRadius.circular(7),
+                                    ),
+                                    child: Text(
+                                      condition.toString(),
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        color: _conditionPillTextColor(
+                                          condition.toString(),
+                                        ),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, size: 16),
+                                    tooltip: 'Edit',
+                                    splashRadius: 18,
+                                    constraints: const BoxConstraints(),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () => _showEditPopup(doc),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -588,8 +697,34 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                 },
               ),
             ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 1, // All Assets highlighted
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list_alt_rounded),
+            label: 'All Assets',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.import_export),
+            label: 'Asset Transfer',
           ),
         ],
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.popUntil(context, (route) => route.isFirst);
+          } else if (index == 2) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Asset Transfer coming soon!')),
+            );
+          }
+        },
       ),
     );
   }
