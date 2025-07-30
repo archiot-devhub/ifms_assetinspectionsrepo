@@ -3,9 +3,48 @@ import '../inspections/module_selection_screen.dart';
 import '../assets/asset_register_screen.dart';
 import '../maintenance/maintenance_schedule_screen.dart';
 import '../assets/asset_dashboard_screen.dart';
+import '../screens/login_screen.dart';
 
 class CoreModulesScreen extends StatelessWidget {
   const CoreModulesScreen({super.key});
+
+  Future<void> _handleLogout(BuildContext context) async {
+    // TODO: Add your authentication sign-out logic here
+    // For example: await FirebaseAuth.instance.signOut();
+
+    // For now, showing dialog confirmation
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Logout'),
+            content: const Text('Are you sure you want to log out?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                  // Navigate to login or initial screen after logout
+                  // Navigator.pushReplacementNamed(context, '/login');
+                },
+                child: const Text('Logout'),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldLogout == true) {
+      // await FirebaseAuth.instance.signOut();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,18 +98,21 @@ class CoreModulesScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Home'),
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () => _handleLogout(context),
+          ),
+        ],
       ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Force the grid to always show 2 rows and 4 columns (8 items in all)
             int crossAxisCount =
-                constraints.maxWidth > constraints.maxHeight
-                    ? 4
-                    : 2; // landscape vs portrait
+                constraints.maxWidth > constraints.maxHeight ? 4 : 2;
             int rowCount = (modules.length / crossAxisCount).ceil();
 
-            // Calculate spacing and size so ALL tiles fit on the screen
             double horizontalPadding = 10;
             double verticalPadding = 10;
             double crossSpacing = 10;
@@ -96,8 +138,7 @@ class CoreModulesScreen extends StatelessWidget {
                 vertical: verticalPadding,
               ),
               child: GridView.builder(
-                physics:
-                    const NeverScrollableScrollPhysics(), // Prevent scrolling
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: modules.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,

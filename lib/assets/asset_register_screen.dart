@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:open_file/open_file.dart';
 import 'bulk_upload_asset_screen.dart';
+import 'asset_dashboard_screen.dart';
 import 'dart:io';
 
 class AssetRegisterScreen extends StatefulWidget {
@@ -563,23 +564,29 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 6,
+                            horizontal: 12,
+                          ),
                           child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Condition dot
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                                child: CircleAvatar(
-                                  radius: 7,
-                                  backgroundColor: _conditionDotColor(
-                                    condition.toString(),
-                                  ),
+                              // SINGLE status circle (Active = green, Inactive = red, else gray)
+                              Container(
+                                width: 14,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  color:
+                                      status.toLowerCase() == 'active'
+                                          ? Colors.green
+                                          : status.toLowerCase() == 'inactive'
+                                          ? Colors.red
+                                          : Colors.grey,
+                                  shape: BoxShape.circle,
                                 ),
                               ),
+                              const SizedBox(width: 10),
+
                               // Main info
                               Expanded(
                                 child: InkWell(
@@ -618,59 +625,30 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 2),
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 1.5,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  status == "Active"
-                                                      ? Colors.green.shade50
-                                                      : Colors.grey.shade200,
-                                              borderRadius:
-                                                  BorderRadius.circular(7),
-                                            ),
-                                            child: Text(
-                                              status,
-                                              style: TextStyle(
-                                                color:
-                                                    status == "Active"
-                                                        ? Colors.green
-                                                        : Colors.grey,
-                                                fontSize: 11.5,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
                                     ],
                                   ),
                                 ),
                               ),
-                              // Trailing - Condition pill + edit, compact
+
+                              // Trailing: Condition pill + edit button (unchanged)
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
-                                      vertical: 1.5,
+                                      vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
                                       color: _conditionPillColor(
                                         condition.toString(),
                                       ),
-                                      borderRadius: BorderRadius.circular(7),
+                                      borderRadius: BorderRadius.circular(14),
                                     ),
                                     child: Text(
                                       condition.toString(),
                                       style: TextStyle(
-                                        fontSize: 11.5,
+                                        fontSize: 12,
                                         color: _conditionPillTextColor(
                                           condition.toString(),
                                         ),
@@ -679,7 +657,7 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                                     ),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.edit, size: 16),
+                                    icon: const Icon(Icons.edit, size: 20),
                                     tooltip: 'Edit',
                                     splashRadius: 18,
                                     constraints: const BoxConstraints(),
@@ -701,14 +679,14 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, // All Assets highlighted
+        currentIndex: 1, // Assuming 'All Assets' tab is index 1
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
+            icon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt_rounded),
+            icon: Icon(Icons.list_alt),
             label: 'All Assets',
           ),
           BottomNavigationBarItem(
@@ -718,7 +696,13 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
         ],
         onTap: (index) {
           if (index == 0) {
-            Navigator.popUntil(context, (route) => route.isFirst);
+            // Navigate to your AssetDashboardScreen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const AssetDashboardScreen()),
+            );
+          } else if (index == 1) {
+            // Already on current screen - do nothing or scroll to top if desired
           } else if (index == 2) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Asset Transfer coming soon!')),

@@ -104,7 +104,7 @@ class _PPMCheckpointSubmissionScreenState
           'response': response,
           'remarks': remark,
           'scheduledid': widget.scheduleId,
-          'submittedby': 'Technician', // Replace with user info if needed
+          'submittedby': 'Technician',
           'submittedon': Timestamp.now(),
         });
       }
@@ -129,18 +129,30 @@ class _PPMCheckpointSubmissionScreenState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: Text('PPM: ${widget.checklistName}')),
+      appBar: AppBar(
+        title: Text(
+          '${widget.checklistName}',
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
               child:
-                  checkpoints.isEmpty
+                  (checkpoints.isEmpty)
                       ? const Center(child: CircularProgressIndicator())
-                      : ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 80),
+                      : ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 18,
+                        ),
                         itemCount: checkpoints.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final cp = checkpoints[index];
                           final docId = cp['docId'];
@@ -148,29 +160,43 @@ class _PPMCheckpointSubmissionScreenState
                               cp['checkpointname'] ?? cp['checkpoint'] ?? 'N/A';
 
                           return Card(
-                            margin: const EdgeInsets.all(12),
+                            margin: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 1,
                             child: Padding(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                                horizontal: 14,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  // Checkpoint name (always visible, multiline if needed)
                                   Text(
                                     checkpointName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16.5,
+                                          color: Colors.black,
+                                        ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 7),
+                                  // Select Yes/No/N/A
                                   Row(
                                     children:
                                         ['Yes', 'No', 'N/A'].map((option) {
                                           return Expanded(
                                             child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
                                               children: [
                                                 Radio<String>(
                                                   value: option,
-                                                  groupValue: responses[docId],
+                                                  groupValue:
+                                                      responses[docId] ?? '',
                                                   onChanged: (value) {
                                                     setState(() {
                                                       responses[docId] = value;
@@ -180,19 +206,33 @@ class _PPMCheckpointSubmissionScreenState
                                                       MaterialTapTargetSize
                                                           .shrinkWrap,
                                                 ),
-                                                Text(option),
+                                                Text(
+                                                  option,
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           );
                                         }).toList(),
                                   ),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 5),
+                                  // Remarks textbox
                                   TextFormField(
+                                    minLines: 1,
+                                    maxLines: 3,
                                     decoration: const InputDecoration(
                                       labelText: 'Remarks',
                                       border: OutlineInputBorder(),
                                       isDense: true,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: 8,
+                                        horizontal: 12,
+                                      ),
                                     ),
+                                    initialValue:
+                                        responses['remark_$docId'] ?? '',
                                     onChanged: (value) {
                                       responses['remark_$docId'] = value;
                                     },
@@ -205,13 +245,25 @@ class _PPMCheckpointSubmissionScreenState
                       ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: 18,
+                top: 8,
+              ),
               child: SizedBox(
                 width: double.infinity,
+                height: 48,
                 child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   onPressed: isSubmitting ? null : submitResponses,
                   icon: const Icon(Icons.check_circle),
-                  label: const Text('Submit Checklist'),
+                  label:
+                      isSubmitting
+                          ? const Text('Submitting...')
+                          : const Text('Submit Checklist'),
                 ),
               ),
             ),

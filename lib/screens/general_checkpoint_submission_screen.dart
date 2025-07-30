@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../models/checkpoint.dart';
 import 'general_success_screen.dart';
@@ -70,7 +70,10 @@ class _GeneralCheckpointSubmissionScreenState
   }
 
   Future<void> submitCheckpoints() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      // Optionally Scroll to top or show a toast here
+      return;
+    }
 
     try {
       for (var cp in checkpoints) {
@@ -95,12 +98,12 @@ class _GeneralCheckpointSubmissionScreenState
               'checkpoint': cp.checkpoint,
               'response': cp.response,
               'remarks': cp.remarks,
-              'imageUrl': imageUrl,
+              'imageUrl': imageUrl ?? '',
               'submittedOn': Timestamp.now(),
             });
       }
 
-      // NEW (safe update)
+      // Update Inspection status to Submitted, safely
       final querySnapshot =
           await FirebaseFirestore.instance
               .collection('AssignedInspectionCheckpoints')
@@ -137,9 +140,13 @@ class _GeneralCheckpointSubmissionScreenState
     switch (cp.inputType) {
       case 'radio':
         return Column(
+          mainAxisSize: MainAxisSize.min,
           children:
               ['Yes', 'No'].map((option) {
                 return RadioListTile<String>(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(option),
                   value: option,
                   groupValue: cp.response,
                   onChanged: (val) {
@@ -147,15 +154,15 @@ class _GeneralCheckpointSubmissionScreenState
                       cp.response = val!;
                     });
                   },
-                  title: Text(option),
                 );
               }).toList(),
         );
       case 'text':
         return TextFormField(
-          initialValue: cp.response,
+          initialValue: cp.response ?? '',
           decoration: const InputDecoration(
             hintText: 'Enter response',
+            isDense: true,
             border: OutlineInputBorder(),
           ),
           validator: (value) {
@@ -174,65 +181,138 @@ class _GeneralCheckpointSubmissionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Submit General Inspection')),
+      appBar: AppBar(
+        title: Text('Checklist: ${widget.category}'),
+        centerTitle: true,
+      ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
-              : Form(
-                key: _formKey,
-                child: ListView.builder(
-                  itemCount: checkpoints.length,
-                  itemBuilder: (context, index) {
-                    final cp = checkpoints[index];
-                    return Card(
-                      margin: const EdgeInsets.all(12),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              cp.checkpoint,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            buildInputField(cp, index),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Remarks (optional)',
-                                border: OutlineInputBorder(),
-                              ),
-                              onChanged: (val) => cp.remarks = val,
-                            ),
-                            const SizedBox(height: 8),
-                            if (cp.image != null)
-                              Image.file(
-                                cp.image!,
-                                height: 150,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              ),
-                            TextButton.icon(
-                              onPressed: () => pickImage(index),
-                              icon: const Icon(Icons.camera_alt),
-                              label: const Text('Upload Image'),
-                            ),
-                          ],
+              : SafeArea(
+                child: Form(
+                  key: _formKey,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: ListView.separated(
+                            separatorBuilder:
+                                (_, __) => const SizedBox(height: 10),
+                            itemCount: checkpoints.length,
+                            itemBuilder: (context, index) {
+                              final cp = checkpoints[index];
+
+                              return Card(
+                                margin: EdgeInsets.zero,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 1,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        cp.checkpoint,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      buildInputField(cp, index),
+                                      const SizedBox(height: 8),
+                                      TextFormField(
+                                        minLines: 1,
+                                        maxLines: 2,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Remarks (optional)',
+                                          border: OutlineInputBorder(),
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                        ),
+                                        initialValue: cp.remarks ?? '',
+                                        onChanged: (val) => cp.remarks = val,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      if (cp.image != null)
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: Image.file(
+                                            cp.image!,
+                                            height: 80,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      TextButton.icon(
+                                        onPressed: () => pickImage(index),
+                                        icon: const Icon(Icons.camera_alt),
+                                        label: const Text('Upload Image'),
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 0,
+                                          ),
+                                          textStyle: const TextStyle(
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                        SafeArea(
+                          top: false,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 15,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                onPressed: submitCheckpoints,
+                                child: const Text('Submit Checklist'),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: submitCheckpoints,
-        label: const Text('Submit'),
-        icon: const Icon(Icons.check),
-      ),
     );
   }
 }

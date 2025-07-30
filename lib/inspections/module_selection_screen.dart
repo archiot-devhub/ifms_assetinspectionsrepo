@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/inspection_list_screen.dart'; // Your existing Asset Inspection screen
 import '../screens/general_inspection_list_screen.dart'; // To be created
+import '../core/core_modules_screen.dart';
 
 class ModuleSelectionScreen extends StatelessWidget {
   const ModuleSelectionScreen({super.key});
@@ -21,7 +22,20 @@ class ModuleSelectionScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Choose Inspection Module')),
+      appBar: AppBar(
+        title: const Text('Choose Inspection Module'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back to Core Modules',
+          onPressed: () {
+            // Instead of popping, navigate to CoreModuleScreen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const CoreModulesScreen()),
+            );
+          },
+        ),
+      ),
       body: GridView.builder(
         padding: const EdgeInsets.all(24),
         itemCount: inspectionModules.length,

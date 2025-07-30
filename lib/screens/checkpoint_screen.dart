@@ -6,7 +6,7 @@ import 'dart:io';
 import 'success_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../models/checkpoint.dart'; // ✅ Your model should have: checkpointID, checkpoint, inputType, response, remarks, image
+import '../models/checkpoint.dart'; // Your model with checkpointID, checkpoint, inputType, response, remarks, image
 
 class CheckpointScreen extends StatefulWidget {
   final String assetId;
@@ -70,7 +70,7 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
       for (var cp in checkpoints) {
         String? imageUrl;
 
-        // ✅ Upload image if exists
+        // Upload image if selected
         if (cp.image != null) {
           final fileName = '${widget.inspectionId}_${cp.checkpointID}.jpg';
           final ref = storage.ref().child('checkpoint_images/$fileName');
@@ -78,7 +78,7 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
           imageUrl = await uploadTask.ref.getDownloadURL();
         }
 
-        // ✅ Save to SubmittedCheckpoints
+        // Save checkpoint submission
         await firestore.collection('SubmittedCheckpoints').add({
           'inspectionID': widget.inspectionId,
           'assetID': widget.assetId,
@@ -93,7 +93,7 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
         });
       }
 
-      // ✅ Update AssignedChecklists status to 'Submitted'
+      // Update assigned checklist status to Submitted
       final assignedSnap =
           await firestore
               .collection('AssignedChecklists')
@@ -109,7 +109,6 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
         context,
         MaterialPageRoute(builder: (_) => const SuccessScreen()),
       );
-      // instead of just Navigator.pop(context)
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -131,81 +130,169 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
                 ),
               )
               : Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 12,
+                ),
                 child: ListView(
                   children: [
-                    Text(
-                      "Asset ID: ${widget.assetId}",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      "Asset Name: ${widget.assetName}",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    ...checkpoints.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      var cp = entry.value;
-
-                      return Column(
+                    // Asset Info Section
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Colors.grey.shade300,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            cp.checkpoint,
+                            "Asset ID:",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.assetId,
                             style: const TextStyle(fontSize: 16),
                           ),
-                          Row(
-                            children: [
-                              Radio<String>(
-                                value: 'Yes',
-                                groupValue: cp.response,
-                                onChanged:
-                                    (value) =>
-                                        setState(() => cp.response = value),
-                              ),
-                              const Text('Yes'),
-                              Radio<String>(
-                                value: 'No',
-                                groupValue: cp.response,
-                                onChanged:
-                                    (value) =>
-                                        setState(() => cp.response = value),
-                              ),
-                              const Text('No'),
-                            ],
-                          ),
-                          TextField(
-                            decoration: const InputDecoration(
-                              hintText: 'Enter remarks if any',
-                              border: OutlineInputBorder(),
+                          const SizedBox(height: 12),
+                          Text(
+                            "Asset Name:",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.grey.shade700,
                             ),
-                            onChanged: (text) => cp.remarks = text,
                           ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              ElevatedButton(
-                                onPressed: () => _pickImage(index),
-                                child: const Text("Add Picture"),
-                              ),
-                              const SizedBox(width: 10),
-                              if (cp.image != null)
-                                Image.file(
-                                  cp.image!,
-                                  height: 50,
-                                  width: 50,
-                                  fit: BoxFit.cover,
-                                ),
-                            ],
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.assetName,
+                            style: const TextStyle(fontSize: 16),
                           ),
-                          const Divider(height: 20),
                         ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Checkpoints List
+                    ...checkpoints.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      Checkpoint cp = entry.value;
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.blueGrey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blueGrey.shade100),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              cp.checkpoint,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                // Yes Radio
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Radio<String>(
+                                        value: 'Yes',
+                                        groupValue: cp.response,
+                                        onChanged: (value) {
+                                          setState(() => cp.response = value);
+                                        },
+                                      ),
+                                      const Text('Yes'),
+                                    ],
+                                  ),
+                                ),
+                                // No Radio
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Radio<String>(
+                                        value: 'No',
+                                        groupValue: cp.response,
+                                        onChanged: (value) {
+                                          setState(() => cp.response = value);
+                                        },
+                                      ),
+                                      const Text('No'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            // Remarks Input
+                            TextField(
+                              decoration: const InputDecoration(
+                                hintText: 'Enter remarks if any',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                isDense: true,
+                              ),
+                              onChanged: (text) => cp.remarks = text,
+                            ),
+                            const SizedBox(height: 10),
+
+                            // Image Picker Section
+                            Row(
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () => _pickImage(index),
+                                  child: const Text("Add Picture"),
+                                ),
+                                const SizedBox(width: 12),
+                                if (cp.image != null)
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Image.file(
+                                      cp.image!,
+                                      height: 60,
+                                      width: 60,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
                       );
                     }),
-                    const SizedBox(height: 20),
+
+                    // Submit Button
                     Center(
                       child: ElevatedButton(
                         onPressed: _submitChecklist,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(160, 45),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         child: const Text("Submit"),
                       ),
                     ),

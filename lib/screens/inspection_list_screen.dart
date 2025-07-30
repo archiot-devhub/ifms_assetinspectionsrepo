@@ -17,10 +17,7 @@ class InspectionListScreen extends StatefulWidget {
 
 class _InspectionListScreenState extends State<InspectionListScreen> {
   String searchQuery = '';
-  String? selectedStatus;
-
-  final String username = 'adspl1005';
-  final String role = 'Technician';
+  String? selectedStatus = 'All';
 
   List<AssignedChecklist> inspections = [];
   bool isLoading = true;
@@ -36,12 +33,15 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isFirstLoad) {
-      fetchInspections(); // Refresh when coming back to screen
+      fetchInspections(); // Refresh on re-entering screen
     }
     _isFirstLoad = false;
   }
 
   Future<void> fetchInspections() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       final querySnapshot =
           await FirebaseFirestore.instance
@@ -56,7 +56,7 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
         isLoading = false;
       });
     } catch (e) {
-      print('Error fetching inspections: $e');
+      debugPrint('Error fetching inspections: $e');
       setState(() {
         isLoading = false;
       });
@@ -67,13 +67,10 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
   Widget build(BuildContext context) {
     final filteredInspections =
         inspections.where((inspection) {
+          final searchLower = searchQuery.toLowerCase();
           final matchesSearch =
-              inspection.assetName.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ) ||
-              inspection.assetId.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              );
+              inspection.assetName.toLowerCase().contains(searchLower) ||
+              inspection.assetId.toLowerCase().contains(searchLower);
 
           final matchesStatus =
               selectedStatus == null ||
@@ -85,7 +82,7 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inspections'),
+        title: const Text('Asset Inspections'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           tooltip: 'Back to Modules',
@@ -96,70 +93,31 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
             );
           },
         ),
-
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  username,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  role,
-                  style: const TextStyle(fontSize: 12, color: Colors.white70),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [
+          // Search and Status Filter
           Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                if (constraints.maxWidth < 400) {
-                  // Mobile View
+                bool isMobile = constraints.maxWidth < 400;
+
+                if (isMobile) {
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              decoration: const InputDecoration(
-                                hintText: 'Search by Asset ID or Name',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.search),
-                              ),
-                              onChanged: (value) {
-                                setState(() {
-                                  searchQuery = value;
-                                });
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          IconButton(
-                            icon: const Icon(Icons.refresh),
-                            tooltip: 'Reload Inspections',
-                            onPressed: () {
-                              setState(() {
-                                isLoading = true;
-                              });
-                              fetchInspections();
-                            },
-                          ),
-                        ],
+                      TextField(
+                        decoration: const InputDecoration(
+                          hintText: 'Search by Asset ID or Name',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.search),
+                        ),
+                        onChanged: (value) {
+                          setState(() => searchQuery = value);
+                        },
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
                         value: selectedStatus,
                         decoration: const InputDecoration(
@@ -178,50 +136,29 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
                           ),
                         ],
                         onChanged: (value) {
-                          setState(() {
-                            selectedStatus = value;
-                          });
+                          setState(() => selectedStatus = value);
                         },
                       ),
                     ],
                   );
                 } else {
-                  // Desktop View
+                  // Desktop / Wider screens
                   return Row(
                     children: [
                       Expanded(
-                        flex: 2,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                decoration: const InputDecoration(
-                                  hintText: 'Search by Asset ID or Name',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.search),
-                                ),
-                                onChanged: (value) {
-                                  setState(() {
-                                    searchQuery = value;
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            IconButton(
-                              icon: const Icon(Icons.refresh),
-                              tooltip: 'Reload Inspections',
-                              onPressed: () {
-                                setState(() {
-                                  isLoading = true;
-                                });
-                                fetchInspections();
-                              },
-                            ),
-                          ],
+                        flex: 3,
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            hintText: 'Search by Asset ID or Name',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.search),
+                          ),
+                          onChanged: (value) {
+                            setState(() => searchQuery = value);
+                          },
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       Expanded(
                         flex: 1,
                         child: DropdownButtonFormField<String>(
@@ -242,9 +179,7 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
                             ),
                           ],
                           onChanged: (value) {
-                            setState(() {
-                              selectedStatus = value;
-                            });
+                            setState(() => selectedStatus = value);
                           },
                         ),
                       ),
@@ -254,103 +189,148 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
               },
             ),
           ),
+          const Divider(height: 1),
+          // List or Loading
           Expanded(
             child:
                 isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : ListView.builder(
-                      itemCount: filteredInspections.length,
-                      itemBuilder: (context, index) {
-                        final inspection = filteredInspections[index];
-
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            vertical: 6,
-                            horizontal: 10,
-                          ),
-                          elevation: 3,
-                          child: ListTile(
-                            leading: const Icon(Icons.assignment),
-                            title: Text(
-                              '${inspection.assetName} (${inspection.assetId})',
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Date: ${DateFormat('dd-MM-yyyy').format(inspection.scheduledDate)}',
-                                ),
-                                Text(
-                                  'Status: ${inspection.status}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        inspection.status == 'Submitted'
-                                            ? Colors.green
-                                            : Colors.red,
-                                  ),
-                                ),
-                                Text('Checked By: ${inspection.checkedBy}'),
-                              ],
-                            ),
-                            trailing: IconButton(
-                              icon: Icon(
-                                inspection.status == 'Submitted'
-                                    ? Icons.visibility
-                                    : Icons.qr_code_scanner,
-                                color:
-                                    inspection.status == 'Submitted'
-                                        ? Colors.blue
-                                        : null,
-                              ),
-                              tooltip:
-                                  inspection.status == 'Submitted'
-                                      ? 'View Details'
-                                      : 'Scan QR',
-                              onPressed: () async {
-                                if (inspection.status == 'Submitted') {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (_) => SubmittedCheckpointsScreen(
-                                            inspectionId:
-                                                inspection.inspectionId,
-                                          ),
-                                    ),
-                                  );
-                                } else {
-                                  final scannedAssetId = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const QRScannerScreen(),
-                                    ),
-                                  );
-
-                                  if (scannedAssetId != null &&
-                                      scannedAssetId
-                                          .toString()
-                                          .trim()
-                                          .isNotEmpty) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (_) => CheckpointScreen(
-                                              assetId: scannedAssetId,
-                                              assetName: inspection.assetName,
-                                              inspectionId:
-                                                  inspection.inspectionId,
-                                            ),
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                            ),
-                          ),
-                        );
+                    : filteredInspections.isEmpty
+                    ? const Center(child: Text('No inspections available'))
+                    : RefreshIndicator(
+                      onRefresh: () async {
+                        await fetchInspections();
                       },
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 12,
+                        ),
+                        itemCount: filteredInspections.length,
+                        itemBuilder: (context, index) {
+                          final inspection = filteredInspections[index];
+                          final isSubmitted =
+                              inspection.status.toLowerCase() == 'submitted';
+                          final statusColor =
+                              isSubmitted ? Colors.green : Colors.red;
+
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 14,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Asset Name + ID + Icon
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.assignment_outlined,
+                                        color: Colors.blueAccent,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '${inspection.assetName} (${inspection.assetId})',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          isSubmitted
+                                              ? Icons.visibility
+                                              : Icons.qr_code_scanner,
+                                          color:
+                                              isSubmitted
+                                                  ? Colors.blue
+                                                  : Colors.black,
+                                        ),
+                                        tooltip:
+                                            isSubmitted
+                                                ? 'View Details'
+                                                : 'Scan QR',
+                                        onPressed: () async {
+                                          if (isSubmitted) {
+                                            await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) =>
+                                                        SubmittedCheckpointsScreen(
+                                                          inspectionId:
+                                                              inspection
+                                                                  .inspectionId,
+                                                        ),
+                                              ),
+                                            );
+                                          } else {
+                                            final scannedAssetId =
+                                                await Navigator.push<String>(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder:
+                                                        (_) =>
+                                                            const QRScannerScreen(),
+                                                  ),
+                                                );
+                                            if (scannedAssetId != null &&
+                                                scannedAssetId
+                                                    .trim()
+                                                    .isNotEmpty) {
+                                              await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (_) => CheckpointScreen(
+                                                        assetId: scannedAssetId,
+                                                        assetName:
+                                                            inspection
+                                                                .assetName,
+                                                        inspectionId:
+                                                            inspection
+                                                                .inspectionId,
+                                                      ),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Date: ${DateFormat('dd-MM-yyyy').format(inspection.scheduledDate)}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  Text(
+                                    'Status: ${inspection.status}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                      color: statusColor,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Checked By: ${inspection.checkedBy}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
           ),
         ],

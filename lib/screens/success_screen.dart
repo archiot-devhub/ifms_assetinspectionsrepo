@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'inspection_list_screen.dart'; // Assuming your inspection list screen is named this way and in the same folder or adjust the import path accordingly
 
 class SuccessScreen extends StatelessWidget {
   const SuccessScreen({super.key});
@@ -9,32 +10,58 @@ class SuccessScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // ✅ Network image instead of local asset
+              // Confirmation Icon/Image
               Image.network(
-                'https://cdn2.iconfinder.com/data/icons/greenline/512/check-512.png',
-                height: 160,
+                'https://cdn-icons-png.flaticon.com/512/190/190411.png', // A cleaner checkmark icon; you can keep your own URL
+                height: 140,
+                fit: BoxFit.contain,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               const Text(
                 'Checklist Submitted!',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               const Text(
                 'Your inspection checklist has been successfully submitted.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 18, color: Colors.black87),
               ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.popUntil(context, (route) => route.isFirst);
-                },
-                child: const Text('Back to Home'),
+              const SizedBox(height: 48),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onPressed: () {
+                    // Navigate to InspectionListScreen and clear stack
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const InspectionListScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  child: const Text('Back to Inspection List'),
+                ),
               ),
             ],
           ),

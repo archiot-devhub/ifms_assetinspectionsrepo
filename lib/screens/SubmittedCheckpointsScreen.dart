@@ -10,59 +10,170 @@ class SubmittedCheckpointsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Submitted Checkpoints")),
-      body: FutureBuilder<QuerySnapshot>(
-        future:
-            FirebaseFirestore.instance
-                .collection('SubmittedCheckpoints')
-                .where('inspectionID', isEqualTo: inspectionId)
-                .get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: SafeArea(
+        child: FutureBuilder<QuerySnapshot>(
+          future:
+              FirebaseFirestore.instance
+                  .collection('SubmittedCheckpoints')
+                  .where('inspectionID', isEqualTo: inspectionId)
+                  .get(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No submitted checkpoints found.'));
-          }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(
+                child: Text('No submitted checkpoints found.'),
+              );
+            }
 
-          final docs = snapshot.data!.docs;
+            final docs = snapshot.data!.docs;
 
-          return ListView.builder(
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              final data = docs[index].data() as Map<String, dynamic>;
+            // Extract Asset ID and Asset Name from first document, fallback safely
+            final firstData = docs.first.data() as Map<String, dynamic>?;
 
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+            final assetId =
+                firstData?['assetId'] ?? firstData?['assetID'] ?? '-';
+            final assetName =
+                firstData?['assetName'] ?? firstData?['assetname'] ?? '-';
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(
+                12,
+                12,
+                12,
+                24,
+              ), // Extra bottom padding
+              children: [
+                // Asset info section
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 14,
+                  ),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blueGrey.shade100),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Checkpoint: ${data['checkpoint']}",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        "Asset ID:",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.blueGrey.shade700,
+                        ),
                       ),
                       const SizedBox(height: 4),
-                      Text("Response: ${data['response']}"),
-                      Text("Remarks: ${data['remarks'] ?? '-'}"),
-                      if (data['imageUrl'] != null && data['imageUrl'] != '')
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Image.network(
-                            data['imageUrl'],
-                            height: 150,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
+                      Text(assetId, style: const TextStyle(fontSize: 16)),
+                      const SizedBox(height: 12),
+                      Text(
+                        "Asset Name:",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.blueGrey.shade700,
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(assetName, style: const TextStyle(fontSize: 16)),
                     ],
                   ),
                 ),
-              );
-            },
-          );
-        },
+
+                // Checkpoints list
+                ...docs.map((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final checkpointTitle =
+                      data['checkpoint'] ?? 'Unnamed Checkpoint';
+                  final response = data['response'] ?? '-';
+                  final remarks = data['remarks'] ?? '-';
+                  final imageUrl = (data['imageUrl'] as String?) ?? '';
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            checkpointTitle,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Response: $response",
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Remarks: $remarks",
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          if (imageUrl.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  imageUrl,
+                                  height: 180,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, progress) {
+                                    if (progress == null) return child;
+                                    return SizedBox(
+                                      height: 180,
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              progress.expectedTotalBytes !=
+                                                      null
+                                                  ? progress
+                                                          .cumulativeBytesLoaded /
+                                                      progress
+                                                          .expectedTotalBytes!
+                                                  : null,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder:
+                                      (_, __, ___) => SizedBox(
+                                        height: 180,
+                                        child: Center(
+                                          child: Icon(
+                                            Icons.broken_image,
+                                            size: 60,
+                                            color: Colors.grey[400],
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/assigned_inspection_checklist.dart';
+import 'package:intl/intl.dart';
+
+import '../models/assigned_inspection_checklist.dart'; // Adjust import path
 import 'general_checkpoint_submission_screen.dart';
-import 'generalsubmittedcheckpointsscreen.dart'; // ✅ Add this line
+import 'generalsubmittedcheckpointsscreen.dart'; // Adjust import path
+import '../inspections/module_selection_screen.dart';
 
 class GeneralInspectionListScreen extends StatefulWidget {
   const GeneralInspectionListScreen({super.key});
@@ -59,15 +62,15 @@ class _GeneralInspectionListScreenState
 
   void applyFilters() {
     setState(() {
+      final searchLower = searchQuery.toLowerCase();
       filteredInspections =
           inspections.where((item) {
             final matchesSearch = item.inspectionID.toLowerCase().contains(
-              searchQuery.toLowerCase(),
+              searchLower,
             );
             final matchesStatus =
-                selectedStatus == 'All'
-                    ? true
-                    : item.status.toLowerCase() == selectedStatus.toLowerCase();
+                selectedStatus == 'All' ||
+                item.status.toLowerCase() == selectedStatus.toLowerCase();
             return matchesSearch && matchesStatus;
           }).toList();
     });
@@ -86,189 +89,208 @@ class _GeneralInspectionListScreenState
     }
   }
 
-  IconData getTrailingIcon(String status) {
-    return status.toLowerCase() == 'Completed'
-        ? Icons.remove_red_eye
-        : Icons.assignment;
+  Future<void> _handleRefresh() async {
+    await fetchInspections();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('General Inspections')),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
-                children: [
-                  // 🔍 Search & Reload
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: 'Search by Inspection ID',
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              searchQuery = value;
-                              applyFilters();
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.refresh),
-                          onPressed: fetchInspections,
-                          tooltip: 'Reload Inspections',
-                        ),
-                      ],
-                    ),
-                  ),
+      appBar: AppBar(
+        title: const Text('General Inspections'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back to Modules',
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const ModuleSelectionScreen()),
+            );
+          },
+        ),
+      ),
+      body: Column(
+        children: [
+          // Search input on top
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: TextField(
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                hintText: 'Search by Inspection ID',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                searchQuery = value;
+                applyFilters();
+              },
+            ),
+          ),
 
-                  // 🔽 Status Dropdown
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Row(
-                      children: [
-                        const Text('Filter by Status:'),
-                        const SizedBox(width: 10),
-                        DropdownButton<String>(
-                          value: selectedStatus,
-                          items: const [
-                            DropdownMenuItem(value: 'All', child: Text('All')),
-                            DropdownMenuItem(
-                              value: 'Scheduled',
-                              child: Text('Scheduled'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Completed',
-                              child: Text('Completed'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Delayed',
-                              child: Text('Delayed'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              selectedStatus = value;
-                              applyFilters();
-                            }
-                          },
+          // Status dropdown below search
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+            child: DropdownButtonFormField<String>(
+              decoration: const InputDecoration(
+                labelText: 'Filter by Status',
+                border: OutlineInputBorder(),
+              ),
+              value: selectedStatus,
+              items: const [
+                DropdownMenuItem(value: 'All', child: Text('All')),
+                DropdownMenuItem(value: 'Scheduled', child: Text('Scheduled')),
+                DropdownMenuItem(value: 'Completed', child: Text('Completed')),
+                DropdownMenuItem(value: 'Delayed', child: Text('Delayed')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  selectedStatus = value;
+                  applyFilters();
+                }
+              },
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          // Inspection List with pull-to-refresh
+          Expanded(
+            child:
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredInspections.isEmpty
+                    ? const Center(child: Text('No inspections found.'))
+                    : RefreshIndicator(
+                      onRefresh: _handleRefresh,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 10,
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
+                        itemCount: filteredInspections.length,
+                        itemBuilder: (context, index) {
+                          final item = filteredInspections[index];
+                          final statusColor = getStatusColor(item.status);
+                          final isCompleted =
+                              item.status.toLowerCase() == 'completed';
 
-                  // 📋 List
-                  Expanded(
-                    child:
-                        filteredInspections.isEmpty
-                            ? const Center(child: Text('No inspections found.'))
-                            : ListView.builder(
-                              itemCount: filteredInspections.length,
-                              itemBuilder: (context, index) {
-                                final item = filteredInspections[index];
-
-                                return Card(
-                                  elevation: 3,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  child: ListTile(
-                                    title: Text(
-                                      'Inspection ID: ${item.inspectionID}',
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Scheduled Date: ${item.scheduledDate.toLocal().toString().split(' ')[0]}',
-                                        ),
-                                        Text('Assigned To: ${item.assignedTo}'),
-                                        Text(
-                                          'Status: ${item.status}',
-                                          style: TextStyle(
-                                            color: getStatusColor(item.status),
+                          return Card(
+                            elevation: 3,
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 14,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Inspection ID and action button row
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.assignment_turned_in,
+                                        color: Colors.blueAccent,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Inspection ID: ${item.inspectionID}',
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.bold,
+                                            fontSize: 16,
                                           ),
                                         ),
-                                        Text('Remarks: ${item.remarks ?? "-"}'),
-                                        Text(
-                                          'Completed On: ${item.completedOn != null ? item.completedOn!.toLocal().toString().split(' ')[0] : "-"}',
-                                        ),
-                                      ],
-                                    ),
-                                    trailing: IconButton(
-                                      icon: Icon(
-                                        getTrailingIcon(item.status),
-                                        color:
-                                            item.status.toLowerCase() ==
-                                                    'completed'
-                                                ? Colors.green
-                                                : Colors.orange,
                                       ),
-                                      tooltip:
-                                          item.status.toLowerCase() ==
-                                                  'completed'
-                                              ? 'View Submitted Checklist'
-                                              : 'Submit Checklist',
-                                      onPressed: () {
-                                        if (item.status.toLowerCase() ==
-                                            'completed') {
-                                          // ✅ Navigate to general submitted checkpoints screen
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (_) =>
-                                                      GeneralSubmittedCheckpointsScreen(
-                                                        inspectionId:
-                                                            item.inspectionID,
-                                                        category: item.category,
-                                                      ),
-                                            ),
-                                          );
-                                        } else {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (_) =>
-                                                      GeneralCheckpointSubmissionScreen(
-                                                        inspectionID:
-                                                            item.inspectionID,
-                                                        category: item.category,
-                                                        locationID:
-                                                            item.locationID,
-                                                      ),
-                                            ),
-                                          ).then((value) {
-                                            if (value == 'submitted') {
-                                              fetchInspections(); // refresh after submission
-                                            }
-                                          });
-                                        }
-                                      },
+                                      if (isCompleted)
+                                        TextButton.icon(
+                                          icon: const Icon(
+                                            Icons.visibility_outlined,
+                                          ),
+                                          label: const Text('View Inspections'),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) =>
+                                                        GeneralSubmittedCheckpointsScreen(
+                                                          inspectionId:
+                                                              item.inspectionID,
+                                                          category:
+                                                              item.category,
+                                                        ),
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      else
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) =>
+                                                        GeneralCheckpointSubmissionScreen(
+                                                          inspectionID:
+                                                              item.inspectionID,
+                                                          category:
+                                                              item.category,
+                                                          locationID:
+                                                              item.locationID,
+                                                        ),
+                                              ),
+                                            ).then((value) {
+                                              if (value == 'submitted') {
+                                                fetchInspections(); // Refresh after submission
+                                              }
+                                            });
+                                          },
+                                          child: const Text(
+                                            'Submit Inspection',
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 8),
+
+                                  // Additional details including Assigned To
+                                  Text(
+                                    'Scheduled Date: ${DateFormat('dd-MM-yyyy').format(item.scheduledDate)}',
+                                  ),
+                                  Text(
+                                    'Assigned To: ${item.assignedTo}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  Text(
+                                    'Status: ${item.status}',
+                                    style: TextStyle(
+                                      color: statusColor,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                );
-                              },
+                                  Text(
+                                    'Remarks: ${item.remarks ?? "-"}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
                             ),
-                  ),
-                ],
-              ),
+                          );
+                        },
+                      ),
+                    ),
+          ),
+        ],
+      ),
     );
   }
 }
