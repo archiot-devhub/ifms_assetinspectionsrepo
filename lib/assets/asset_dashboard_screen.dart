@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'bulk_upload_asset_screen.dart';
 import 'asset_register_screen.dart';
 import '../core/core_modules_screen.dart';
+import 'asset_detail_screen.dart';
+import 'asset_details_qr_scanner_screen.dart'; // Your QR scanner screen
 
 class AssetDashboardScreen extends StatelessWidget {
   const AssetDashboardScreen({super.key});
@@ -16,7 +18,7 @@ class AssetDashboardScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            // Replace with CoreModulesScreen (use pushReplacement to prevent stacking)
+            // Navigate back to Core Modules screen
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const CoreModulesScreen()),
@@ -75,7 +77,7 @@ class _DashboardBody extends StatelessWidget {
               degrading: degrading,
             ),
             const SizedBox(height: 16),
-            const _QuickActions(),
+            _QuickActions(),
             const SizedBox(height: 16),
             const _RecentActivityPlaceholder(),
           ],
@@ -111,30 +113,48 @@ class _AssetStatsCard extends StatelessWidget {
       return Expanded(
         child: Container(
           height: 70,
-          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: 6,
+          ), // reduced horizontal margin
+          padding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 12,
+          ), // adjusted padding
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
             children: [
-              Icon(icon, color: color, size: 32),
-              const SizedBox(width: 10),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$value',
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
+              Icon(icon, color: color, size: 28), // slightly smaller icon
+              const SizedBox(width: 8), // reduced spacing
+              Flexible(
+                // Use Flexible to constrain text
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$value',
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
                     ),
-                  ),
-                  Text(label, style: const TextStyle(fontSize: 12)),
-                ],
+                    Text(
+                      label,
+                      style: const TextStyle(fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -169,7 +189,7 @@ class _AssetStatsCard extends StatelessWidget {
               color: Colors.red,
             ),
             buildStatBox(
-              label: 'Undermaintenance',
+              label: 'Under Maintenance',
               value: underMaintenance,
               icon: Icons.build_circle_outlined,
               color: Colors.orange,
@@ -181,10 +201,10 @@ class _AssetStatsCard extends StatelessWidget {
             buildStatBox(
               label: 'Degrading',
               value: degrading,
-              icon: Icons.trending_down_outlined,
+              icon: Icons.trending_down,
               color: Colors.purple,
             ),
-            const SizedBox(width: 0), // To keep layout even
+            const SizedBox(width: 0),
           ],
         ),
       ],
@@ -204,8 +224,10 @@ class _QuickActions extends StatelessWidget {
             icon: const Icon(Icons.qr_code_scanner_rounded),
             label: const Text('Scan Asset QR'),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Scan Asset QR coming soon!')),
+              // Navigate to your QR scanner screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AssetScanScreen()),
               );
             },
           ),
@@ -213,7 +235,7 @@ class _QuickActions extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: OutlinedButton.icon(
-            icon: const Icon(Icons.upload_file_rounded),
+            icon: const Icon(Icons.upload_file),
             label: const Text('Import Via Excel'),
             onPressed: () {
               Navigator.push(
@@ -252,15 +274,15 @@ class _RecentActivityPlaceholder extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ),
-        ...activities.map(
-          (activity) => Card(
+        ...activities.map((activity) {
+          return Card(
             margin: const EdgeInsets.symmetric(vertical: 4),
             child: ListTile(
               title: Text(activity),
               subtitle: const Text("Few mins ago"),
             ),
-          ),
-        ),
+          );
+        }),
       ],
     );
   }
@@ -281,7 +303,7 @@ class _AssetDashboardBottomBar extends StatelessWidget {
           label: 'Dashboard',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.list_alt_rounded),
+          icon: Icon(Icons.list_alt),
           label: 'All Assets',
         ),
         BottomNavigationBarItem(
@@ -300,7 +322,6 @@ class _AssetDashboardBottomBar extends StatelessWidget {
             const SnackBar(content: Text('Asset Transfer coming soon!')),
           );
         }
-        // index == 0 is Dashboard; do nothing or maybe refresh
       },
     );
   }
