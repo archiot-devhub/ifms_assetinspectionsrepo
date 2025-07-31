@@ -16,267 +16,202 @@ class AssetDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(assetName)),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 600;
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child:
-                  isWide
-                      ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _topQuickActions(context, assetData),
-                          const SizedBox(height: 18),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildImage(assetImageUrl),
-                              const SizedBox(width: 36),
-                              Expanded(child: _buildDetailsSection(context)),
-                            ],
-                          ),
-                        ],
-                      )
-                      : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _topQuickActions(context, assetData),
-                          const SizedBox(height: 12),
-                          Center(child: _buildImage(assetImageUrl)),
-                          const SizedBox(height: 18),
-                          _buildDetailsSection(context),
-                        ],
-                      ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  /// Top "Maintenance" and "Next Due" icon buttons row
-  // Update _topQuickActions to accept assetData
-  Widget _topQuickActions(
-    BuildContext context,
-    QueryDocumentSnapshot assetData,
-  ) {
-    final String assetID = assetData.get('assetID') ?? '';
-    final String assetName = assetData.get('assetname') ?? '';
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        _iconAction(
-          context,
-          icon: Icons.settings,
-          label: "Maintenance",
-          onTap: () {
-            if (assetID.isNotEmpty) {
-              Navigator.push(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _collapsibleCard(
                 context,
-                MaterialPageRoute(
-                  builder:
-                      (_) => MaintenanceDetailsPPMScreen(
-                        assetID: assetID,
-                        assetName: assetName,
+                title: 'Basic Info',
+                initiallyExpanded: true,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Key Details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _infoRow('Asset ID', assetData.get('assetID') ?? ''),
+                          _infoRow(
+                            'Asset Name',
+                            assetData.get('assetname') ?? '',
+                          ),
+                          _infoRow(
+                            'Asset Group',
+                            assetData.get('assetgroup') ?? '',
+                          ),
+                          _infoRow(
+                            'Condition',
+                            assetData.get('condition') ?? '',
+                          ),
+                          _infoRow('Status', assetData.get('status') ?? ''),
+                        ],
                       ),
+                    ),
+                    // Image (enlarged, rounded corners)
+                    if (assetImageUrl.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            assetImageUrl,
+                            width: 100,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (_, __, ___) => const Icon(
+                                  Icons.broken_image,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Asset ID not found')),
-              );
-            }
-          },
+              ),
+              const SizedBox(height: 10),
+              _collapsibleCard(
+                context,
+                title: 'Location & Assignment',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _infoRow('Location', assetData.get('location') ?? ''),
+                    _infoRow('Floor / Zone', assetData.get('floorzone') ?? ''),
+                    _infoRow('Room / Area', assetData.get('roomarea') ?? ''),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              _collapsibleCard(
+                context,
+                title: 'Technical / Manufacturer Info',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _infoRow(
+                      'Manufacturer',
+                      assetData.get('manufacturer') ?? '',
+                    ),
+                    _infoRow('Model', assetData.get('modelnumber') ?? ''),
+                    _infoRow(
+                      'Serial Number',
+                      assetData.get('serialnumber') ?? '',
+                    ),
+                    _infoRow(
+                      'Technical Specs',
+                      assetData.get('technicalclassification') ?? '',
+                    ),
+
+                    _infoRow(
+                      'Network Config',
+                      assetData.get('networkconfig') ?? '',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              _collapsibleCard(
+                context,
+                title: 'Lifecycle & Status Timeline',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _infoRow(
+                      'Purchase Date',
+                      _formatDate(assetData.get('purchasedate')),
+                    ),
+                    _infoRow(
+                      'Installation Date',
+                      _formatDate(assetData.get('installationdate')),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              _collapsibleCard(
+                context,
+                title: 'Attached Documents',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    documentTile(
+                      'Asset Manual',
+                      assetData.get('manualUrl') ?? '',
+                    ),
+                    documentTile(
+                      'Warranty Certificate',
+                      assetData.get('warrantyUrl') ?? '',
+                    ),
+                    documentTile('Invoice', assetData.get('invoiceUrl') ?? ''),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(width: 16),
-        _iconAction(
-          context,
-          icon: Icons.calendar_today_outlined,
-          label: "Next Due",
-          onTap: () {
-            // your existing or new logic for Next Due
-          },
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _iconAction(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    VoidCallback? onTap,
+  Widget _collapsibleCard(
+    BuildContext context, { // <-- add this parameter
+    required String title,
+    required Widget child,
+    bool initiallyExpanded = false,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.blueAccent.withOpacity(0.25)),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.blueAccent.withOpacity(0.08),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: EdgeInsets.zero,
+      elevation: 2,
+      child: Theme(
+        data: Theme.of(
+          context,
+        ).copyWith(dividerColor: Colors.transparent), // use context, not null
+        child: ExpansionTile(
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.blue,
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.blue, size: 22),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-              ),
-            ),
-          ],
+          ),
+          initiallyExpanded: initiallyExpanded,
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          children: [child],
         ),
       ),
     );
   }
 
-  Widget _buildDetailsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionTitle('Key Details'),
-        infoRow('Asset ID', assetData.get('assetID') ?? ''),
-        infoRow('Asset Name', assetData.get('assetname') ?? ''),
-        infoRow('Asset Group', assetData.get('assetgroup') ?? ''),
-        infoRow('Status', assetData.get('status') ?? ''),
-        infoRow('Condition', assetData.get('condition') ?? ''),
-
-        const SizedBox(height: 16),
-        _sectionTitle('Technical Details'),
-        infoRow(
-          'Technical Classification',
-          assetData.get('technicalclassification') ?? '',
-        ),
-        infoRow('Serial Number', assetData.get('serialnumber') ?? ''),
-        infoRow('Model Number', assetData.get('modelnumber') ?? ''),
-        infoRow('Manufacturer', assetData.get('manufacturer') ?? ''),
-
-        const SizedBox(height: 16),
-        _sectionTitle('Financial Details'),
-        infoRow(
-          'Purchase Cost',
-          assetData.get('purchasecost')?.toString() ?? '',
-        ),
-        infoRow('Vendor Name', assetData.get('vendorname') ?? ''),
-        infoRow('Purchase Date', _formatDate(assetData.get('purchasedate'))),
-        infoRow(
-          'Replacement Cost',
-          assetData.get('replacementcost')?.toString() ?? '',
-        ),
-        infoRow(
-          'Depreciation Rate',
-          assetData.get('depreciationrate')?.toString() ?? '',
-        ),
-        infoRow(
-          'Depreciation Value',
-          assetData.get('depreciationvalue')?.toString() ?? '',
-        ),
-        infoRow(
-          'Residual Value',
-          assetData.get('residualvalue')?.toString() ?? '',
-        ),
-
-        const SizedBox(height: 16),
-        _sectionTitle('Lifecycle Details'),
-        infoRow('Useful Life', assetData.get('usefullife')?.toString() ?? ''),
-        infoRow(
-          'Installation Date',
-          _formatDate(assetData.get('installationdate')),
-        ),
-
-        const SizedBox(height: 24),
-        const Divider(),
-        const SizedBox(height: 10),
-        _sectionTitle('Attached Documents'),
-
-        documentTile('Asset Manual', assetData.get('manualUrl') ?? ''),
-        documentTile(
-          'Warranty Certificate',
-          assetData.get('warrantyUrl') ?? '',
-        ),
-        documentTile('Invoice', assetData.get('invoiceUrl') ?? ''),
-      ],
-    );
-  }
-
-  Widget _buildImage(String imageUrl) {
-    return Container(
-      width: 180,
-      height: 180,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.grey.shade100,
-      ),
-      child:
-          imageUrl.isNotEmpty
-              ? ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.contain,
-                  width: 180,
-                  height: 180,
-                  errorBuilder:
-                      (_, __, ___) => const Center(
-                        child: Icon(Icons.broken_image, size: 60),
-                      ),
-                ),
-              )
-              : const Center(
-                child: Icon(
-                  Icons.image_not_supported,
-                  size: 60,
-                  color: Colors.grey,
-                ),
-              ),
-    );
-  }
-
-  Widget _sectionTitle(String title) {
+  Widget _infoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6, top: 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-          color: Colors.blueGrey,
-        ),
-      ),
-    );
-  }
-
-  Widget infoRow(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 140,
             child: Text(
-              '$title:',
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              '$label:',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: Colors.black87,
+              ),
             ),
           ),
           Expanded(
             child: Text(
-              (value.trim().isNotEmpty) ? value : '-',
+              (value.isNotEmpty) ? value : '-',
               style: const TextStyle(fontSize: 14, color: Colors.black87),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -288,7 +223,7 @@ class AssetDetailScreen extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: ListTile(
-        leading: const Icon(Icons.description),
+        leading: const Icon(Icons.insert_drive_file),
         title: Text(title, style: const TextStyle(fontSize: 14)),
         trailing:
             url.trim().isNotEmpty
@@ -313,15 +248,14 @@ class AssetDetailScreen extends StatelessWidget {
     );
   }
 
-  // Format Firestore Timestamp or other date string
   String _formatDate(dynamic date) {
     if (date == null) return '-';
     if (date is Timestamp) {
       final dt = date.toDate();
-      return "${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}";
+      return "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}";
     }
     if (date is DateTime) {
-      return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      return "${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}";
     }
     return date.toString();
   }
