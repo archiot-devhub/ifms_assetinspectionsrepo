@@ -49,21 +49,21 @@ class AssetDetailScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Image (enlarged, rounded corners)
+                    // Image (smaller, rounded corners)
                     if (assetImageUrl.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(left: 16),
+                        padding: const EdgeInsets.only(left: 10),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                           child: Image.network(
                             assetImageUrl,
-                            width: 100,
-                            height: 80,
+                            width: 64,
+                            height: 50,
                             fit: BoxFit.cover,
                             errorBuilder:
                                 (_, __, ___) => const Icon(
                                   Icons.broken_image,
-                                  size: 50,
+                                  size: 36,
                                   color: Colors.grey,
                                 ),
                           ),
@@ -105,7 +105,6 @@ class AssetDetailScreen extends StatelessWidget {
                       'Technical Specs',
                       assetData.get('technicalclassification') ?? '',
                     ),
-
                     _infoRow(
                       'Network Config',
                       assetData.get('networkconfig') ?? '',
@@ -158,7 +157,7 @@ class AssetDetailScreen extends StatelessWidget {
   }
 
   Widget _collapsibleCard(
-    BuildContext context, { // <-- add this parameter
+    BuildContext context, {
     required String title,
     required Widget child,
     bool initiallyExpanded = false,
@@ -168,9 +167,7 @@ class AssetDetailScreen extends StatelessWidget {
       margin: EdgeInsets.zero,
       elevation: 2,
       child: Theme(
-        data: Theme.of(
-          context,
-        ).copyWith(dividerColor: Colors.transparent), // use context, not null
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           title: Text(
             title,
@@ -196,12 +193,12 @@ class AssetDetailScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 140,
+            width: 120,
             child: Text(
               '$label:',
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontSize: 15, // slightly larger for better legibility
                 color: Colors.black87,
               ),
             ),
@@ -209,7 +206,7 @@ class AssetDetailScreen extends StatelessWidget {
           Expanded(
             child: Text(
               (value.isNotEmpty) ? value : '-',
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
+              style: const TextStyle(fontSize: 15, color: Colors.black87),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),

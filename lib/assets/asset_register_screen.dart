@@ -9,6 +9,7 @@ import 'package:open_file/open_file.dart';
 import 'bulk_upload_asset_screen.dart';
 import 'asset_dashboard_screen.dart';
 import 'dart:io';
+import 'asset_details_qr_scanner_screen.dart';
 
 class AssetRegisterScreen extends StatefulWidget {
   const AssetRegisterScreen({super.key});
@@ -20,7 +21,8 @@ class AssetRegisterScreen extends StatefulWidget {
 class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
   String searchText = '';
   String selectedCondition = 'All';
-  String selectedStatus = 'All';
+  String selectedStatus = 'All'; // Keep for Add/Edit forms only
+  String selectedCategory = 'All'; // New Category filter
 
   final List<String> conditionOptions = [
     'All',
@@ -30,6 +32,8 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
     'Degrading',
   ];
   final List<String> statusOptions = ['All', 'Active', 'Inactive'];
+
+  final List<String> categoryOptions = ['All', 'HVAC', 'Pumps', 'Firesystem'];
 
   Future<void> _exportToCSV(List<QueryDocumentSnapshot> docs) async {
     try {
@@ -154,7 +158,10 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                           _buildTextField('assetID', assetData),
                           _buildTextField('assetname', assetData),
                           _buildTextField('assetgroup', assetData),
-                          _buildTextField('status', assetData),
+                          _buildTextField(
+                            'status',
+                            assetData,
+                          ), // status stays here
                           _buildTextField('condition', assetData),
 
                           const SizedBox(height: 12),
@@ -234,7 +241,6 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
     );
   }
 
-  // Section header widget
   Widget _sectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -360,7 +366,11 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                       await FirebaseFirestore.instance
                           .collection('AssetRegister')
                           .doc(asset.id)
-                          .update({'condition': condition, 'status': status});
+                          .update({
+                            'condition': condition,
+                            'status': status,
+                            'modifiedTime': FieldValue.serverTimestamp(),
+                          });
                       Navigator.pop(context);
                     },
                     child: const Text('Update'),
@@ -454,10 +464,22 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
               child: Column(
                 children: [
                   TextField(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Search by Asset Name or ID',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.search),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: InkWell(
+                        onTap: () {
+                          // Navigate to the asset_details_qr_scanner_screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AssetScanScreen(),
+                            ),
+                          );
+                        },
+                        child: const Icon(Icons.qr_code_scanner_rounded),
+                      ),
                     ),
                     onChanged:
                         (value) =>
@@ -489,21 +511,21 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: selectedStatus,
+                          value: selectedCategory,
                           items:
-                              statusOptions
+                              categoryOptions
                                   .map(
-                                    (s) => DropdownMenuItem(
-                                      value: s,
-                                      child: Text(s),
+                                    (c) => DropdownMenuItem(
+                                      value: c,
+                                      child: Text(c),
                                     ),
                                   )
                                   .toList(),
                           onChanged:
                               (value) =>
-                                  setState(() => selectedStatus = value!),
+                                  setState(() => selectedCategory = value!),
                           decoration: const InputDecoration(
-                            labelText: 'Status',
+                            labelText: 'Category',
                           ),
                         ),
                       ),
@@ -531,19 +553,24 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                         final assetID =
                             (data['assetID'] ?? '').toString().toLowerCase();
                         final condition = (data['condition'] ?? '').toString();
-                        final status = (data['status'] ?? '').toString();
+                        final technicalClassification =
+                            (data['technicalclassification'] ?? '').toString();
+
                         final matchesSearch =
                             assetName.contains(searchText) ||
                             assetID.contains(searchText);
                         final matchesCondition =
                             selectedCondition == 'All' ||
                             condition == selectedCondition;
-                        final matchesStatus =
-                            selectedStatus == 'All' || status == selectedStatus;
+                        final matchesCategory =
+                            selectedCategory == 'All' ||
+                            technicalClassification == selectedCategory;
+
                         return matchesSearch &&
                             matchesCondition &&
-                            matchesStatus;
+                            matchesCategory;
                       }).toList();
+
                   if (docs.isEmpty) {
                     return const Center(child: Text('No assets found.'));
                   }
@@ -571,23 +598,22 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // SINGLE status circle (Active = green, Inactive = red, else gray)
                               Container(
                                 width: 14,
                                 height: 14,
                                 decoration: BoxDecoration(
                                   color:
-                                      status.toLowerCase() == 'active'
+                                      status.toString().toLowerCase() ==
+                                              'active'
                                           ? Colors.green
-                                          : status.toLowerCase() == 'inactive'
+                                          : status.toString().toLowerCase() ==
+                                              'inactive'
                                           ? Colors.red
                                           : Colors.grey,
                                   shape: BoxShape.circle,
                                 ),
                               ),
                               const SizedBox(width: 10),
-
-                              // Main info
                               Expanded(
                                 child: InkWell(
                                   onTap: () {
@@ -629,8 +655,6 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                                   ),
                                 ),
                               ),
-
-                              // Trailing: Condition pill + edit button (unchanged)
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -696,13 +720,12 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
         ],
         onTap: (index) {
           if (index == 0) {
-            // Navigate to your AssetDashboardScreen
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const AssetDashboardScreen()),
             );
           } else if (index == 1) {
-            // Already on current screen - do nothing or scroll to top if desired
+            // Already on current screen - do nothing
           } else if (index == 2) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Asset Transfer coming soon!')),

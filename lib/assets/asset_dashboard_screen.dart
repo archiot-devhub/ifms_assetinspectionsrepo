@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 import 'bulk_upload_asset_screen.dart';
 import 'asset_register_screen.dart';
@@ -77,9 +78,10 @@ class _DashboardBody extends StatelessWidget {
               degrading: degrading,
             ),
             const SizedBox(height: 16),
-            _QuickActions(),
+            const _QuickActions(),
             const SizedBox(height: 16),
             const _RecentActivityPlaceholder(),
+            // Asset list removed as per your request
           ],
         );
       },
@@ -113,24 +115,17 @@ class _AssetStatsCard extends StatelessWidget {
       return Expanded(
         child: Container(
           height: 70,
-          margin: const EdgeInsets.symmetric(
-            horizontal: 4,
-            vertical: 6,
-          ), // reduced horizontal margin
-          padding: const EdgeInsets.symmetric(
-            horizontal: 8,
-            vertical: 12,
-          ), // adjusted padding
+          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
             children: [
-              Icon(icon, color: color, size: 28), // slightly smaller icon
-              const SizedBox(width: 8), // reduced spacing
+              Icon(icon, color: color, size: 28),
+              const SizedBox(width: 8),
               Flexible(
-                // Use Flexible to constrain text
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,34 +252,106 @@ class _RecentActivityPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activities = [
-      "ID023 Chiller status changed",
-      "ID024 Compressor malfunction detected",
-      "ID027 System maintenance scheduled",
-      "ID028 Filter replacement needed",
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Text(
-            "Recent Activity",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        ),
-        ...activities.map((activity) {
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            child: ListTile(
-              title: Text(activity),
-              subtitle: const Text("Few mins ago"),
-            ),
+    return StreamBuilder<QuerySnapshot>(
+      stream:
+          FirebaseFirestore.instance
+              .collection('AssetRegister')
+              .orderBy('modifiedTime', descending: true)
+              .limit(10)
+              .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator()),
           );
-        }),
-      ],
+        }
+        final docs = snapshot.data!.docs;
+        if (docs.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            child: Text("No recent activities."),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8.0, left: 4),
+              child: Text(
+                "Recent Activity",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+            ...docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              final assetID = data['assetID'] ?? 'Unknown';
+              final condition = data['condition'] ?? '-';
+              final status = data['status'] ?? '-';
+              final Timestamp? modifiedTs = data['modifiedTime'] as Timestamp?;
+              final dateStr =
+                  modifiedTs != null ? _prettyTimeAgo(modifiedTs.toDate()) : '';
+
+              String desc = '';
+              if ((data['condition_changed'] ?? false) == true) {
+                desc = "Condition changed to \"$condition\"";
+              } else if ((data['status_changed'] ?? false) == true) {
+                desc = "Status changed to \"$status\"";
+              } else {
+                desc = "Condition: \"$condition\", Status: \"$status\"";
+              }
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  elevation: 0.7,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Asset $assetID ${desc.isNotEmpty ? "- $desc" : ""}',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          dateStr,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ],
+        );
+      },
     );
+  }
+
+  /// Utility: Human friendly time difference ("3 min ago")
+  static String _prettyTimeAgo(DateTime time) {
+    final Duration diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} hours ago';
+    if (diff.inDays < 7) return '${diff.inDays} days ago';
+    return DateFormat('yyyy-MM-dd').format(time);
   }
 }
 
