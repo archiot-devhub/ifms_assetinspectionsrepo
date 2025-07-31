@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:profiminspectionapp/screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 
 void main() async {
@@ -17,7 +18,6 @@ class ProfimInspectionApp extends StatelessWidget {
       title: 'Profim Inspection App',
       theme: ThemeData(primarySwatch: Colors.blue),
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(), // 👈 Set Login as initial screen
-    );
+      home: const SplashScreen(),    );
   }
 }
