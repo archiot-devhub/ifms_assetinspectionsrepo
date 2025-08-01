@@ -278,61 +278,83 @@ class _RecentActivityPlaceholder extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Padding(
-              padding: EdgeInsets.only(bottom: 8.0, left: 4),
+              padding: EdgeInsets.only(bottom: 8.0, left: 2),
               child: Text(
                 "Recent Activity",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ),
             ...docs.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               final assetID = data['assetID'] ?? 'Unknown';
-              final condition = data['condition'] ?? '-';
-              final status = data['status'] ?? '-';
+              String activityMsg = '';
+              if ((data['condition_changed'] ?? false) == true) {
+                // Remove quotes for Working/Active
+                String cond = (data['condition'] ?? '').toString();
+                if (cond.toLowerCase() == 'working') cond = 'Working';
+                if (cond.toLowerCase() == 'active') cond = 'Active';
+                activityMsg = "Condition changed to $cond";
+              } else if ((data['status_changed'] ?? false) == true) {
+                String status = (data['status'] ?? '').toString();
+                if (status.toLowerCase() == 'working') status = 'Working';
+                if (status.toLowerCase() == 'active') status = 'Active';
+                activityMsg = "Status changed to $status";
+              } else if (data['desc'] != null) {
+                activityMsg = data['desc'];
+              } else {
+                String cond = (data['condition'] ?? '').toString();
+                String status = (data['status'] ?? '').toString();
+                activityMsg = 'Condition: $cond, Status: $status';
+              }
+
               final Timestamp? modifiedTs = data['modifiedTime'] as Timestamp?;
               final dateStr =
                   modifiedTs != null ? _prettyTimeAgo(modifiedTs.toDate()) : '';
 
-              String desc = '';
-              if ((data['condition_changed'] ?? false) == true) {
-                desc = "Condition changed to \"$condition\"";
-              } else if ((data['status_changed'] ?? false) == true) {
-                desc = "Status changed to \"$status\"";
-              } else {
-                desc = "Condition: \"$condition\", Status: \"$status\"";
-              }
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Material(
-                  color: Colors.white,
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white, // Card background color
                   borderRadius: BorderRadius.circular(10),
-                  elevation: 0.7,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.06),
+                      spreadRadius: 0.5,
+                      blurRadius: 5,
+                      offset: const Offset(1, 1),
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Asset $assetID ${desc.isNotEmpty ? "- $desc" : ""}',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          dateStr,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
+                  ],
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 14,
+                  ),
+                  title: Text(
+                    assetID,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 2.0),
+                    child: Text(
+                      activityMsg,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  trailing: Text(
+                    dateStr,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ),
@@ -344,11 +366,11 @@ class _RecentActivityPlaceholder extends StatelessWidget {
     );
   }
 
-  /// Utility: Human friendly time difference ("3 min ago")
+  // Utility: Human friendly time difference
   static String _prettyTimeAgo(DateTime time) {
     final Duration diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inMinutes < 1) return 'Few mins ago'; // instead of 'Just now'
+    if (diff.inMinutes < 60) return '${diff.inMinutes} mins ago';
     if (diff.inHours < 24) return '${diff.inHours} hours ago';
     if (diff.inDays < 7) return '${diff.inDays} days ago';
     return DateFormat('yyyy-MM-dd').format(time);

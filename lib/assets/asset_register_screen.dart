@@ -585,68 +585,152 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                       return Card(
                         margin: const EdgeInsets.symmetric(
                           horizontal: 12,
-                          vertical: 4,
+                          vertical: 10,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 6,
-                            horizontal: 12,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 14,
-                                height: 14,
-                                decoration: BoxDecoration(
-                                  color:
-                                      status.toString().toLowerCase() ==
-                                              'active'
-                                          ? Colors.green
-                                          : status.toString().toLowerCase() ==
-                                              'inactive'
-                                          ? Colors.red
-                                          : Colors.grey,
-                                  shape: BoxShape.circle,
-                                ),
+                        elevation: 0.7,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => AssetDetailScreen(assetData: doc),
                               ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (_) => AssetDetailScreen(
-                                              assetData: doc,
-                                            ),
-                                      ),
-                                    );
-                                  },
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 14,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Status dot
+                                Container(
+                                  width: 13,
+                                  height: 13,
+                                  margin: const EdgeInsets.only(
+                                    right: 10,
+                                    top: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        status.toString().toLowerCase() ==
+                                                'active'
+                                            ? Colors.green
+                                            : status.toString().toLowerCase() ==
+                                                'inactive'
+                                            ? Colors.red
+                                            : Colors.grey,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                // Text info
+                                Expanded(
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
+                                      // Asset Name + ID in blue
                                       Text(
-                                        '${data['assetname'] ?? "--"}  (${data['assetID'] ?? "--"})',
+                                        '${data['assetname'] ?? "--"} (${data['assetID'] ?? "--"})',
                                         style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.blueAccent,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          color: Color(
+                                            0xFF004EFF,
+                                          ), // Blue color as per image
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        "Group: ${data['assetgroup'] ?? '--'} | Location: ${data['locationID'] ?? '--'}",
-                                        style: const TextStyle(
-                                          fontSize: 11.5,
-                                          color: Colors.black87,
+                                      const SizedBox(height: 6),
+                                      // Asset Group
+                                      // Line 2: Asset Group
+                                      RichText(
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'Group: ',
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.normal,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text:
+                                                  '${data['assetgroup'] ?? "--"}',
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      RichText(
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'Location: ',
+                                              style: const TextStyle(
+                                                fontSize:
+                                                    11, // !! <-- match Group
+                                                fontWeight: FontWeight.normal,
+                                                color:
+                                                    Colors
+                                                        .black87, // !! <-- match Group (was probably black54)
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text:
+                                                  '${data['locationID'] ?? "--"}',
+                                              style: const TextStyle(
+                                                fontSize:
+                                                    11, // !! <-- match Group
+                                                fontWeight: FontWeight.w600,
+                                                color:
+                                                    Colors
+                                                        .black87, // !! <-- match Group
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      RichText(
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'Technical: ',
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.normal,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text:
+                                                  '${data['technicalclassification'] ?? "--"}',
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -654,43 +738,65 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                                     ],
                                   ),
                                 ),
-                              ),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: _conditionPillColor(
-                                        condition.toString(),
+                                // Pill for condition + edit button
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    // Condition pill
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
                                       ),
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: Text(
-                                      condition.toString(),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: _conditionPillTextColor(
+                                      decoration: BoxDecoration(
+                                        color: _conditionPillColor(
                                           condition.toString(),
                                         ),
-                                        fontWeight: FontWeight.bold,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        (condition.toString().toLowerCase() ==
+                                                'working')
+                                            ? 'Working'
+                                            : (condition
+                                                    .toString()
+                                                    .toLowerCase() ==
+                                                'breakdown')
+                                            ? 'Breakdown'
+                                            : (condition
+                                                    .toString()
+                                                    .toLowerCase() ==
+                                                'under maintenance')
+                                            ? 'Under Maintenance'
+                                            : (condition
+                                                    .toString()
+                                                    .toLowerCase() ==
+                                                'degrading')
+                                            ? 'Degrading'
+                                            : condition.toString(),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: _conditionPillTextColor(
+                                            condition.toString(),
+                                          ),
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit, size: 20),
-                                    tooltip: 'Edit',
-                                    splashRadius: 18,
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
-                                    onPressed: () => _showEditPopup(doc),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    const SizedBox(height: 14),
+                                    // Edit icon
+                                    IconButton(
+                                      icon: const Icon(Icons.edit, size: 20),
+                                      splashRadius: 18,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      onPressed: () => _showEditPopup(doc),
+                                      tooltip: 'Edit',
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
