@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../models/scheduled_ppm.dart';
 import '../../maintenance/ppm_checkpoint_submission_screen.dart';
 import '../../maintenance/maintenance_calendar_screen.dart';
+import 'maintenance_submitted_checkpoints.dart';
 
 class MaintenanceScheduleScreen extends StatefulWidget {
   const MaintenanceScheduleScreen({super.key});
@@ -20,6 +21,10 @@ class _MaintenanceScheduleScreenState extends State<MaintenanceScheduleScreen>
   bool isLoading = true;
   String searchQuery = '';
   late TabController tabController;
+
+  int upcomingCount = 0;
+  int overdueCount = 0;
+  int completedCount = 0;
 
   @override
   void initState() {
@@ -44,12 +49,60 @@ class _MaintenanceScheduleScreenState extends State<MaintenanceScheduleScreen>
             }).toList();
         isLoading = false;
       });
+      updateCounts();
     } catch (e) {
       print('Error loading PPMs: $e');
       setState(() {
         isLoading = false;
       });
     }
+  }
+
+  void updateCounts() {
+    final today = DateTime.now();
+    final todayDateOnly = DateTime(today.year, today.month, today.day);
+
+    int upcoming = 0;
+    int overdue = 0;
+    int completed = 0;
+
+    final queryLower = searchQuery.toLowerCase();
+
+    for (var ppm in schedules) {
+      final assetNameLower = ppm.assetName.toLowerCase();
+      final assetIdLower = ppm.assetId.toLowerCase();
+
+      if (!(assetNameLower.contains(queryLower) ||
+          assetIdLower.contains(queryLower))) {
+        continue;
+      }
+
+      final scheduledDateOnly = DateTime(
+        ppm.scheduledDate.year,
+        ppm.scheduledDate.month,
+        ppm.scheduledDate.day,
+      );
+      final statusLower = ppm.status.toLowerCase();
+
+      if ((scheduledDateOnly.isAtSameMomentAs(todayDateOnly) ||
+              scheduledDateOnly.isAfter(todayDateOnly)) &&
+          statusLower != 'completed' &&
+          statusLower != 'skipped') {
+        upcoming++;
+      } else if (scheduledDateOnly.isBefore(todayDateOnly) &&
+          statusLower != 'completed' &&
+          statusLower != 'skipped') {
+        overdue++;
+      } else if (statusLower == 'completed') {
+        completed++;
+      }
+    }
+
+    setState(() {
+      upcomingCount = upcoming;
+      overdueCount = overdue;
+      completedCount = completed;
+    });
   }
 
   @override
@@ -60,31 +113,38 @@ class _MaintenanceScheduleScreenState extends State<MaintenanceScheduleScreen>
 
   List<ScheduledPPM> filterByTab(String tab) {
     final today = DateTime.now();
+    final queryLower = searchQuery.toLowerCase();
 
     return schedules.where((ppm) {
-      // Standard search and status dropdown filtering
       final matchesSearch =
-          ppm.assetName.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          ppm.assetId.toLowerCase().contains(searchQuery.toLowerCase());
+          ppm.assetName.toLowerCase().contains(queryLower) ||
+          ppm.assetId.toLowerCase().contains(queryLower);
 
       final scheduledDate = ppm.scheduledDate;
-      final status = ppm.status;
+      final statusLower = ppm.status.toLowerCase();
 
       if (!matchesSearch) return false;
 
+      DateTime todayDateOnly = DateTime(today.year, today.month, today.day);
+      DateTime scheduledDateOnly = DateTime(
+        scheduledDate.year,
+        scheduledDate.month,
+        scheduledDate.day,
+      );
+
       switch (tab) {
         case 'Upcoming':
-          return scheduledDate.isAfter(today) &&
-              status != 'Completed' &&
-              status != 'Skipped';
+          return (scheduledDateOnly.isAtSameMomentAs(todayDateOnly) ||
+                  scheduledDateOnly.isAfter(todayDateOnly)) &&
+              statusLower != 'completed' &&
+              statusLower != 'skipped';
+
         case 'Overdue':
-          return scheduledDate.isBefore(
-                DateTime(today.year, today.month, today.day),
-              ) &&
-              status != 'Completed' &&
-              status != 'Skipped';
+          return scheduledDateOnly.isBefore(todayDateOnly) &&
+              statusLower != 'completed' &&
+              statusLower != 'skipped';
         case 'Completed':
-          return status == 'Completed';
+          return statusLower == 'completed';
         default:
           return true;
       }
@@ -125,10 +185,10 @@ class _MaintenanceScheduleScreenState extends State<MaintenanceScheduleScreen>
           labelColor: Colors.blue,
           unselectedLabelColor: Colors.grey[600],
           indicatorColor: Colors.blue,
-          tabs: const [
-            Tab(text: "Upcoming"),
-            Tab(text: "Overdue"),
-            Tab(text: "Completed"),
+          tabs: [
+            Tab(text: "Upcoming ($upcomingCount)"),
+            Tab(text: "Overdue ($overdueCount)"),
+            Tab(text: "Completed ($completedCount)"),
           ],
         ),
       ),
@@ -158,7 +218,12 @@ class _MaintenanceScheduleScreenState extends State<MaintenanceScheduleScreen>
                           horizontal: 8,
                         ),
                       ),
-                      onChanged: (value) => setState(() => searchQuery = value),
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value;
+                        });
+                        updateCounts();
+                      },
                     ),
                   ),
                 ],
@@ -172,18 +237,18 @@ class _MaintenanceScheduleScreenState extends State<MaintenanceScheduleScreen>
                         : TabBarView(
                           controller: tabController,
                           children: [
-                            // Upcoming
                             _PPMListWidget(
+                              tab: 'Upcoming',
                               data: filterByTab('Upcoming'),
                               fetchSchedules: fetchSchedules,
                             ),
-                            // Overdue
                             _PPMListWidget(
+                              tab: 'Overdue',
                               data: filterByTab('Overdue'),
                               fetchSchedules: fetchSchedules,
                             ),
-                            // Completed
                             _PPMListWidget(
+                              tab: 'Completed',
                               data: filterByTab('Completed'),
                               fetchSchedules: fetchSchedules,
                             ),
@@ -201,7 +266,13 @@ class _MaintenanceScheduleScreenState extends State<MaintenanceScheduleScreen>
 class _PPMListWidget extends StatelessWidget {
   final List<ScheduledPPM> data;
   final Future<void> Function() fetchSchedules;
-  const _PPMListWidget({required this.data, required this.fetchSchedules});
+  final String tab;
+
+  const _PPMListWidget({
+    required this.data,
+    required this.fetchSchedules,
+    required this.tab,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -309,25 +380,45 @@ class _PPMListWidget extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
-                    icon: const Icon(Icons.visibility_outlined, size: 19),
-                    label: const Text(
-                      'View Details',
-                      style: TextStyle(fontSize: 13.5),
+                    icon: Icon(
+                      tab == 'Completed'
+                          ? Icons.visibility_outlined
+                          : Icons.edit_outlined,
+                      size: 19,
+                    ),
+                    label: Text(
+                      tab == 'Completed' ? 'View Details' : 'Submit Checklist',
+                      style: const TextStyle(fontSize: 13.5),
                     ),
                     onPressed: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => PPMCheckpointSubmissionScreen(
-                                docId: ppm.docId,
-                                scheduleId: ppm.scheduleId,
-                                checklistName: ppm.planName,
-                              ),
-                        ),
-                      );
-                      if (result == 'submitted') {
-                        fetchSchedules();
+                      if (tab == 'Completed') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => PPMSubmittedCheckpointsScreen(
+                                  assetId: ppm.assetId,
+                                  checklistId:
+                                      ppm.planName, // Adjust if you have actual checklistId
+                                  scheduledId: ppm.scheduleId,
+                                ),
+                          ),
+                        );
+                      } else {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => PPMCheckpointSubmissionScreen(
+                                  docId: ppm.docId,
+                                  scheduleId: ppm.scheduleId,
+                                  checklistName: ppm.planName,
+                                ),
+                          ),
+                        );
+                        if (result == 'submitted') {
+                          fetchSchedules();
+                        }
                       }
                     },
                   ),

@@ -287,6 +287,22 @@ class _MaintenanceDetailsPPMScreenState
                         const SizedBox(height: 4),
                         ...rows,
                         const SizedBox(height: 16),
+                        // Legend for status colors
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            _legendDot(Colors.green),
+                            const SizedBox(width: 6),
+                            Text('Completed  '),
+                            _legendDot(Colors.blue),
+                            const SizedBox(width: 6),
+                            Text('Scheduled  '),
+                            _legendDot(Colors.orange),
+                            const SizedBox(width: 6),
+                            Text('Delayed'),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
 
                         // New Section: Upcoming Maintenance Activities
                         Align(
