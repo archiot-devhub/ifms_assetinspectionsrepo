@@ -50,10 +50,12 @@ dependencies:
   permission_handler: ^12.0.1
   open_file: ^3.5.10
   file_picker: ^10.2.0
+  flutter_svg: ^2.0.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -107,3 +109,11 @@ flutter:
     - assets/logo.png
     - assets/google_icon.png
     - assets/Logo Container.png
+    - assets/icons/Asset  Management.icon.svg
+    - assets/icons/document.icon.svg
+    - assets/icons/maintenance.icon.svg
+    - assets/icons/service.icon.svg
+    - assets/icons/sustainability.icon.svg
+    - assets/icons/tenant.icon.svg
+    - assets/icons/vendor.icon.svg
+    - assets/icons/wo.icon.svg
