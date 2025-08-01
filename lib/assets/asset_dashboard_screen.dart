@@ -6,7 +6,7 @@ import 'bulk_upload_asset_screen.dart';
 import 'asset_register_screen.dart';
 import '../core/core_modules_screen.dart';
 import 'asset_detail_screen.dart';
-import 'asset_details_qr_scanner_screen.dart'; // Your QR scanner screen
+import 'asset_details_qr_scanner_screen.dart';
 
 class AssetDashboardScreen extends StatelessWidget {
   const AssetDashboardScreen({super.key});
@@ -14,19 +14,40 @@ class AssetDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Asset Management'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            // Navigate back to Core Modules screen
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const CoreModulesScreen()),
-            );
-          },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF004EFF),
+                Color(0xFF002F99),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text(
+              'Asset Management',
+              style: TextStyle(color: Colors.white),
+            ),
+            iconTheme: const IconThemeData(color: Colors.white),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CoreModulesScreen()),
+                );
+              },
+            ),
+            automaticallyImplyLeading: false,
+          ),
         ),
-        automaticallyImplyLeading: false,
       ),
       body: const _DashboardBody(),
       bottomNavigationBar: const _AssetDashboardBottomBar(currentIndex: 0),
@@ -40,8 +61,7 @@ class _DashboardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream:
-          FirebaseFirestore.instance.collection('AssetRegister').snapshots(),
+      stream: FirebaseFirestore.instance.collection('AssetRegister').snapshots(),
       builder: (context, snapshot) {
         int totalAssets = 0;
         int working = 0;
@@ -58,8 +78,7 @@ class _DashboardBody extends StatelessWidget {
               working++;
             } else if (cond == 'breakdown') {
               breakdown++;
-            } else if (cond == 'undermaintenance' ||
-                cond == 'under maintenance') {
+            } else if (cond == 'undermaintenance' || cond == 'under maintenance') {
               underMaintenance++;
             } else if (cond == 'degrading') {
               degrading++;
@@ -81,7 +100,6 @@ class _DashboardBody extends StatelessWidget {
             const _QuickActions(),
             const SizedBox(height: 16),
             const _RecentActivityPlaceholder(),
-            // Asset list removed as per your request
           ],
         );
       },
@@ -139,14 +157,12 @@ class _AssetStatsCard extends StatelessWidget {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      softWrap: false,
                     ),
                     Text(
                       label,
                       style: const TextStyle(fontSize: 12),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      softWrap: false,
                     ),
                   ],
                 ),
@@ -212,39 +228,86 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const iconColor = Color(0xFF004EFF); // Icon color in hex
+    final textColor = Colors.grey.shade800; // Grey text
+
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.qr_code_scanner_rounded),
-            label: const Text('Scan Asset QR'),
-            onPressed: () {
-              // Navigate to your QR scanner screen
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AssetScanScreen()),
-              );
-            },
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 6,
+                  offset: Offset(2, 2),
+                ),
+              ],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: TextButton.icon(
+              icon: Icon(Icons.qr_code_scanner_rounded, color: iconColor,size: 24),
+              label: Text(
+                'Scan Asset QR',
+                style: TextStyle(color: textColor),
+              ),
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                backgroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 24),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AssetScanScreen()),
+                );
+              },
+            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.upload_file),
-            label: const Text('Import Via Excel'),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const BulkUploadAssetScreen(),
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 6,
+                  offset: Offset(2, 2),
                 ),
-              );
-            },
+              ],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: TextButton.icon(
+              icon: Icon(Icons.upload_file_outlined, color: iconColor, size: 24),
+              label: Text(
+                'Import Via Excel',
+                style: TextStyle(color: textColor),
+              ),
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                backgroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 24),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BulkUploadAssetScreen()),
+                );
+              },
+            ),
           ),
         ),
       ],
     );
   }
+
+
+
 }
 
 class _RecentActivityPlaceholder extends StatelessWidget {
@@ -253,12 +316,11 @@ class _RecentActivityPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream:
-          FirebaseFirestore.instance
-              .collection('AssetRegister')
-              .orderBy('modifiedTime', descending: true)
-              .limit(10)
-              .snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('AssetRegister')
+          .orderBy('modifiedTime', descending: true)
+          .limit(10)
+          .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Padding(
@@ -289,7 +351,6 @@ class _RecentActivityPlaceholder extends StatelessWidget {
               final assetID = data['assetID'] ?? 'Unknown';
               String activityMsg = '';
               if ((data['condition_changed'] ?? false) == true) {
-                // Remove quotes for Working/Active
                 String cond = (data['condition'] ?? '').toString();
                 if (cond.toLowerCase() == 'working') cond = 'Working';
                 if (cond.toLowerCase() == 'active') cond = 'Active';
@@ -308,13 +369,12 @@ class _RecentActivityPlaceholder extends StatelessWidget {
               }
 
               final Timestamp? modifiedTs = data['modifiedTime'] as Timestamp?;
-              final dateStr =
-                  modifiedTs != null ? _prettyTimeAgo(modifiedTs.toDate()) : '';
+              final dateStr = modifiedTs != null ? _prettyTimeAgo(modifiedTs.toDate()) : '';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white, // Card background color
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
@@ -326,13 +386,10 @@ class _RecentActivityPlaceholder extends StatelessWidget {
                   ],
                 ),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 6,
-                    horizontal: 14,
-                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 14),
                   title: Text(
                     assetID,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
@@ -366,10 +423,9 @@ class _RecentActivityPlaceholder extends StatelessWidget {
     );
   }
 
-  // Utility: Human friendly time difference
   static String _prettyTimeAgo(DateTime time) {
     final Duration diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return 'Few mins ago'; // instead of 'Just now'
+    if (diff.inMinutes < 1) return 'Few mins ago';
     if (diff.inMinutes < 60) return '${diff.inMinutes} mins ago';
     if (diff.inHours < 24) return '${diff.inHours} hours ago';
     if (diff.inDays < 7) return '${diff.inDays} days ago';
@@ -386,6 +442,10 @@ class _AssetDashboardBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: currentIndex,
+      backgroundColor: Colors.white,
+      selectedItemColor: Color(0xFF004EFF),
+      unselectedItemColor: Colors.black,
+      selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.dashboard),
