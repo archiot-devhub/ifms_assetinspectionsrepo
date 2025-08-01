@@ -16,7 +16,8 @@ class ProfimInspectionApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Profim Inspection App',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(primarySwatch: Colors.blue,scaffoldBackgroundColor: Colors.white, // 🔲 Sets all pages' background to white
+      ),
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),    );
   }

@@ -29,7 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Fluttertoast.showToast(msg: 'Login Successful');
 
-        // ✅ Navigate to CoreModulesScreen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const CoreModulesScreen()),

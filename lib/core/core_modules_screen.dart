@@ -112,7 +112,6 @@ class CoreModulesScreen extends StatelessWidget {
             int crossAxisCount =
                 constraints.maxWidth > constraints.maxHeight ? 4 : 2;
             int rowCount = (modules.length / crossAxisCount).ceil();
-
             double horizontalPadding = 10;
             double verticalPadding = 10;
             double crossSpacing = 10;
