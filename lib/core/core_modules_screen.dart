@@ -4,6 +4,7 @@ import '../assets/asset_register_screen.dart';
 import '../maintenance/maintenance_schedule_screen.dart';
 import '../assets/asset_dashboard_screen.dart';
 import '../screens/login_screen.dart';
+import '../maintenance/maintenance_dashboard_screen.dart';
 
 class CoreModulesScreen extends StatelessWidget {
   const CoreModulesScreen({super.key});
@@ -11,29 +12,30 @@ class CoreModulesScreen extends StatelessWidget {
   Future<void> _handleLogout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to log out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Logout'),
+            content: const Text('Are you sure you want to log out?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+                child: const Text('Logout'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, true);
-            },
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
     );
 
     if (shouldLogout == true) {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false,
+        (route) => false,
       );
     }
   }
@@ -50,7 +52,7 @@ class CoreModulesScreen extends StatelessWidget {
       {
         'title': 'Maintenance Management',
         'icon': Icons.build_outlined,
-        'screen': const MaintenanceScheduleScreen(),
+        'screen': const MaintenanceDashboardScreen(),
         'enabled': true,
       },
       {
@@ -117,17 +119,19 @@ class CoreModulesScreen extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             int crossAxisCount =
-            constraints.maxWidth > constraints.maxHeight ? 4 : 2;
+                constraints.maxWidth > constraints.maxHeight ? 4 : 2;
             int rowCount = (modules.length / crossAxisCount).ceil();
             double horizontalPadding = 20;
             double verticalPadding = 20;
             double crossSpacing = 20;
             double mainSpacing = 20;
 
-            double availableWidth = constraints.maxWidth -
+            double availableWidth =
+                constraints.maxWidth -
                 2 * horizontalPadding -
                 (crossAxisCount - 1) * crossSpacing;
-            double availableHeight = constraints.maxHeight -
+            double availableHeight =
+                constraints.maxHeight -
                 2 * verticalPadding -
                 (rowCount - 1) * mainSpacing;
 
@@ -189,7 +193,7 @@ class CoreModulesScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.only(bottom:25.0),
+                            padding: const EdgeInsets.only(bottom: 25.0),
                             child: Icon(
                               module['icon'] as IconData,
                               size: 48,
@@ -198,14 +202,19 @@ class CoreModulesScreen extends StatelessWidget {
                           ),
                           Flexible(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10.0,
+                              ),
                               child: Text(
                                 module['title'] as String,
                                 textAlign: TextAlign.center,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: MediaQuery.of(context).size.width < 400 ? 11 : 13,
+                                  fontSize:
+                                      MediaQuery.of(context).size.width < 400
+                                          ? 11
+                                          : 13,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.black,
                                   height: 1.3,
@@ -214,7 +223,6 @@ class CoreModulesScreen extends StatelessWidget {
                             ),
                           ),
                         ],
-
                       ),
                     ),
                   );

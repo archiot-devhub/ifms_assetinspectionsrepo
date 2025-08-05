@@ -7,6 +7,8 @@ import 'asset_register_screen.dart';
 import '../core/core_modules_screen.dart';
 import 'asset_detail_screen.dart';
 import 'asset_details_qr_scanner_screen.dart';
+import 'asset_timeline_screen.dart';
+import 'asset_addasset_screen.dart';
 
 class AssetDashboardScreen extends StatelessWidget {
   const AssetDashboardScreen({super.key});
@@ -19,10 +21,7 @@ class AssetDashboardScreen extends StatelessWidget {
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFF004EFF),
-                Color(0xFF002F99),
-              ],
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -61,7 +60,8 @@ class _DashboardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('AssetRegister').snapshots(),
+      stream:
+          FirebaseFirestore.instance.collection('AssetRegister').snapshots(),
       builder: (context, snapshot) {
         int totalAssets = 0;
         int working = 0;
@@ -78,7 +78,8 @@ class _DashboardBody extends StatelessWidget {
               working++;
             } else if (cond == 'breakdown') {
               breakdown++;
-            } else if (cond == 'undermaintenance' || cond == 'under maintenance') {
+            } else if (cond == 'undermaintenance' ||
+                cond == 'under maintenance') {
               underMaintenance++;
             } else if (cond == 'degrading') {
               degrading++;
@@ -246,11 +247,12 @@ class _QuickActions extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: TextButton.icon(
-              icon: Icon(Icons.qr_code_scanner_rounded, color: iconColor,size: 24),
-              label: Text(
-                'Scan Asset QR',
-                style: TextStyle(color: textColor),
+              icon: Icon(
+                Icons.qr_code_scanner_rounded,
+                color: iconColor,
+                size: 24,
               ),
+              label: Text('Scan Asset QR', style: TextStyle(color: textColor)),
               style: TextButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -281,7 +283,11 @@ class _QuickActions extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: TextButton.icon(
-              icon: Icon(Icons.upload_file_outlined, color: iconColor, size: 24),
+              icon: Icon(
+                Icons.upload_file_outlined,
+                color: iconColor,
+                size: 24,
+              ),
               label: Text(
                 'Import Via Excel',
                 style: TextStyle(color: textColor),
@@ -296,7 +302,9 @@ class _QuickActions extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const BulkUploadAssetScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const BulkUploadAssetScreen(),
+                  ),
                 );
               },
             ),
@@ -305,9 +313,6 @@ class _QuickActions extends StatelessWidget {
       ],
     );
   }
-
-
-
 }
 
 class _RecentActivityPlaceholder extends StatelessWidget {
@@ -316,11 +321,12 @@ class _RecentActivityPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('AssetRegister')
-          .orderBy('modifiedTime', descending: true)
-          .limit(10)
-          .snapshots(),
+      stream:
+          FirebaseFirestore.instance
+              .collection('AssetRegister')
+              .orderBy('modifiedTime', descending: true)
+              .limit(10)
+              .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Padding(
@@ -369,7 +375,8 @@ class _RecentActivityPlaceholder extends StatelessWidget {
               }
 
               final Timestamp? modifiedTs = data['modifiedTime'] as Timestamp?;
-              final dateStr = modifiedTs != null ? _prettyTimeAgo(modifiedTs.toDate()) : '';
+              final dateStr =
+                  modifiedTs != null ? _prettyTimeAgo(modifiedTs.toDate()) : '';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
@@ -386,7 +393,10 @@ class _RecentActivityPlaceholder extends StatelessWidget {
                   ],
                 ),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 14),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 14,
+                  ),
                   title: Text(
                     assetID,
                     style: const TextStyle(
@@ -446,6 +456,7 @@ class _AssetDashboardBottomBar extends StatelessWidget {
       selectedItemColor: Color(0xFF004EFF),
       unselectedItemColor: Colors.black,
       selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+      type: BottomNavigationBarType.fixed,
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.dashboard),
@@ -455,20 +466,35 @@ class _AssetDashboardBottomBar extends StatelessWidget {
           icon: Icon(Icons.list_alt),
           label: 'All Assets',
         ),
+        BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add Asset'),
         BottomNavigationBarItem(
-          icon: Icon(Icons.import_export),
-          label: 'Asset Transfer',
+          icon: Icon(Icons.timeline), // <-- Timeline icon
+          label: 'Asset Timeline',
         ),
       ],
       onTap: (index) {
-        if (index == 1) {
-          Navigator.push(
+        if (index == 0) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AssetDashboardScreen()),
+          );
+        } else if (index == 1) {
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => const AssetRegisterScreen()),
           );
         } else if (index == 2) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Asset Transfer coming soon!')),
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AddAssetScreen()),
+          );
+        } else if (index == 3) {
+          // <<< ASSET TIMELINE >>>
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AllAssetsTimelineScreen(),
+            ), // Use your timeline screen import/class here
           );
         }
       },

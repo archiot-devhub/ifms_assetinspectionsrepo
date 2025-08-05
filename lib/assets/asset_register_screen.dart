@@ -10,6 +10,8 @@ import 'bulk_upload_asset_screen.dart';
 import 'asset_dashboard_screen.dart';
 import 'dart:io';
 import 'asset_details_qr_scanner_screen.dart';
+import 'asset_timeline_screen.dart';
+import 'asset_addasset_screen.dart';
 
 class AssetRegisterScreen extends StatefulWidget {
   const AssetRegisterScreen({super.key});
@@ -155,9 +157,9 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _sectionHeader('Key Details'),
-                          _buildTextField('assetID', assetData),
-                          _buildTextField('assetname', assetData),
-                          _buildTextField('assetgroup', assetData),
+                          _buildTextField('Asset ID', assetData),
+                          _buildTextField('Asset Name', assetData),
+                          _buildTextField('Asset Group', assetData),
                           _buildTextField(
                             'status',
                             assetData,
@@ -809,7 +811,8 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, // Assuming 'All Assets' tab is index 1
+        currentIndex: 1, // 'All Assets' tab is index 1
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
@@ -819,9 +822,10 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
             icon: Icon(Icons.list_alt),
             label: 'All Assets',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add Asset'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.import_export),
-            label: 'Asset Transfer',
+            icon: Icon(Icons.timeline), // Timeline tab
+            label: 'Asset Timeline',
           ),
         ],
         onTap: (index) {
@@ -833,8 +837,17 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
           } else if (index == 1) {
             // Already on current screen - do nothing
           } else if (index == 2) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Asset Transfer coming soon!')),
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const AddAssetScreen()),
+            );
+          } else if (index == 3) {
+            // Navigate to Asset Timeline screen (import and use your timeline screen here)
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const AllAssetsTimelineScreen(),
+              ),
             );
           }
         },
