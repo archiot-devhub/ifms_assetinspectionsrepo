@@ -81,17 +81,42 @@ class _InspectionListScreenState extends State<InspectionListScreen> {
         }).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Asset Inspections'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Back to Modules',
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const ModuleSelectionScreen()),
-            );
-          },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            iconTheme: const IconThemeData(
+              color: Colors.white,
+            ), // back icon white
+            titleTextStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            title: const Text('Asset Inspections'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              tooltip: 'Back to Modules',
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ModuleSelectionScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
       body: Column(

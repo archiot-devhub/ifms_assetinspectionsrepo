@@ -14,14 +14,37 @@ class GeneralSubmittedCheckpointsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Submitted Checkpoints")),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            iconTheme: const IconThemeData(color: Colors.white),
+            titleTextStyle: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+            title: const Text("Submitted Checkpoints"),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Info bar at the top
+            // Light blue info bar
             Container(
               width: double.infinity,
-              color: Colors.grey[200],
+              color: const Color(0xFFE3F0FF),
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,12 +54,16 @@ class GeneralSubmittedCheckpointsScreen extends StatelessWidget {
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
+                      color: Color(0xFF004EFF), // App header blue
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     "Category: $category",
-                    style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                    style: const TextStyle(
+                      color: Color(0xFF004080), // Slightly darker blue
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),

@@ -103,7 +103,7 @@ class _GeneralCheckpointSubmissionScreenState
             });
       }
 
-      // Update Inspection status to Submitted, safely
+      // Update Inspection status to Submitted
       final querySnapshot =
           await FirebaseFirestore.instance
               .collection('AssignedInspectionCheckpoints')
@@ -181,9 +181,37 @@ class _GeneralCheckpointSubmissionScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Checklist: ${widget.category}'),
-        centerTitle: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            iconTheme: const IconThemeData(
+              color: Colors.white,
+            ), // back icon color
+            titleTextStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+            title: Text('Checklist: ${widget.category}'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        ),
       ),
       body:
           isLoading
@@ -291,6 +319,10 @@ class _GeneralCheckpointSubmissionScreenState
                               width: double.infinity,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(
+                                    0xFF004EFF,
+                                  ), // Header blue
+                                  foregroundColor: Colors.white, // White text
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 15,
                                   ),

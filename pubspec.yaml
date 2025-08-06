@@ -51,6 +51,7 @@ dependencies:
   open_file: ^3.5.10
   file_picker: ^10.2.0
   flutter_svg: ^2.0.7
+  dropdown_search: ^6.0.2
 
 
 dev_dependencies:

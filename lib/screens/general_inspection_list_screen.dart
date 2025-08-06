@@ -96,19 +96,43 @@ class _GeneralInspectionListScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('General Inspections'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Back to Modules',
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const ModuleSelectionScreen()),
-            );
-          },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            iconTheme: const IconThemeData(color: Colors.white),
+            titleTextStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            title: const Text('General Inspections'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              tooltip: 'Back to Modules',
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ModuleSelectionScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
+
       body: Column(
         children: [
           // Search input on top
@@ -183,6 +207,9 @@ class _GeneralInspectionListScreenState
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            color: const Color(
+                              0xFFE3F0FF,
+                            ), // Light blue background matching header
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                 vertical: 8,
@@ -208,12 +235,20 @@ class _GeneralInspectionListScreenState
                                           ),
                                         ),
                                       ),
+
+                                      // View or Submit button with blue font
                                       if (isCompleted)
                                         TextButton.icon(
                                           icon: const Icon(
                                             Icons.visibility_outlined,
+                                            color: Color(0xFF004EFF),
                                           ),
-                                          label: const Text('View Inspections'),
+                                          label: const Text(
+                                            'View Inspections',
+                                            style: TextStyle(
+                                              color: Color(0xFF004EFF),
+                                            ),
+                                          ),
                                           onPressed: () {
                                             Navigator.push(
                                               context,
@@ -231,7 +266,12 @@ class _GeneralInspectionListScreenState
                                           },
                                         )
                                       else
-                                        ElevatedButton(
+                                        TextButton(
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: const Color(
+                                              0xFF004EFF,
+                                            ),
+                                          ),
                                           onPressed: () {
                                             Navigator.push(
                                               context,
@@ -259,10 +299,9 @@ class _GeneralInspectionListScreenState
                                         ),
                                     ],
                                   ),
-
                                   const SizedBox(height: 8),
 
-                                  // Additional details including Assigned To
+                                  // Additional details
                                   Text(
                                     'Scheduled Date: ${DateFormat('dd-MM-yyyy').format(item.scheduledDate)}',
                                   ),

@@ -7,10 +7,10 @@ class MaintenanceDetailsPPMScreen extends StatefulWidget {
   final String assetName;
 
   const MaintenanceDetailsPPMScreen({
-    Key? key,
+    super.key,
     required this.assetID,
     required this.assetName,
-  }) : super(key: key);
+  });
 
   @override
   State<MaintenanceDetailsPPMScreen> createState() =>

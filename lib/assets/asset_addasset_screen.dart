@@ -6,7 +6,7 @@ import 'asset_dashboard_screen.dart';
 class AddAssetScreen extends StatefulWidget {
   final Map<String, dynamic>? assetData;
 
-  const AddAssetScreen({Key? key, this.assetData}) : super(key: key);
+  const AddAssetScreen({super.key, this.assetData});
 
   @override
   _AddAssetScreenState createState() => _AddAssetScreenState();
@@ -286,16 +286,43 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Asset'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            // Using pushReplacement to avoid stacking screens, adjust as needed
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => AssetDashboardScreen()),
-            );
-          },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: AppBar(
+            title: const Text(
+              "Add New asset",
+              style: TextStyle(
+                color: Colors.white, // Explicitly set font color to white
+                fontWeight: FontWeight.w600, // Optional: make it bold
+                fontSize: 20, // Optional: adjust size as needed
+              ),
+            ),
+            backgroundColor:
+                Colors.transparent, // Allows gradient to show through
+            elevation: 0,
+            iconTheme: const IconThemeData(
+              color: Colors.white,
+            ), // Icons to white
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AssetDashboardScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
       body: SingleChildScrollView(

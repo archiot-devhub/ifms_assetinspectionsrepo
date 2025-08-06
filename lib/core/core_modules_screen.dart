@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../inspections/module_selection_screen.dart';
-import '../assets/asset_register_screen.dart';
-import '../maintenance/maintenance_schedule_screen.dart';
 import '../assets/asset_dashboard_screen.dart';
 import '../screens/login_screen.dart';
 import '../maintenance/maintenance_dashboard_screen.dart';
@@ -22,9 +22,7 @@ class CoreModulesScreen extends StatelessWidget {
                 child: const Text('Cancel'),
               ),
               TextButton(
-                onPressed: () {
-                  Navigator.pop(context, true);
-                },
+                onPressed: () => Navigator.pop(context, true),
                 child: const Text('Logout'),
               ),
             ],
@@ -36,6 +34,19 @@ class CoreModulesScreen extends StatelessWidget {
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
         (route) => false,
+      );
+    }
+  }
+
+  Future<void> _launchURL(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not launch Document Management link.'),
+        ),
       );
     }
   }
@@ -77,14 +88,15 @@ class CoreModulesScreen extends StatelessWidget {
         'enabled': false,
       },
       {
-        'title': 'Sustainability Management',
-        'icon': Icons.public,
+        'title':
+            'Digital Twin', // Updated name replacing Sustainability Management
+        'icon': Icons.device_hub,
         'enabled': false,
       },
       {
         'title': 'Document Management',
         'icon': Icons.insert_drive_file_outlined,
-        'enabled': false,
+        'enabled': true, // Set to true to allow link launch
       },
     ];
 
@@ -161,12 +173,19 @@ class CoreModulesScreen extends StatelessWidget {
                   return GestureDetector(
                     onTap: () {
                       if (enabled) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => module['screen'] as Widget,
-                          ),
-                        );
+                        if (module['title'] == 'Document Management') {
+                          _launchURL(
+                            context,
+                            'https://archiotdigitalsolutions.sharepoint.com/sites/FacilityDMS',
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => module['screen'] as Widget,
+                            ),
+                          );
+                        }
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(

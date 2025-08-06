@@ -119,7 +119,39 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Checkpoints - ${widget.assetName}')),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            iconTheme: const IconThemeData(
+              color: Colors.white,
+            ), // back icon color
+            titleTextStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+            title: Text('Checkpoints - ${widget.assetName}'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        ),
+      ),
+
       body:
           checkpoints.isEmpty
               ? Center(
@@ -137,50 +169,6 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
                 child: ListView(
                   children: [
                     // Asset Info Section
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Colors.grey.shade300,
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Asset ID:",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.assetId,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "Asset Name:",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.assetName,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-
                     const SizedBox(height: 16),
 
                     // Checkpoints List
@@ -192,9 +180,11 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
                         margin: const EdgeInsets.only(bottom: 20),
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.blueGrey.shade50,
+                          color: Color(0xFFE3F0FF), // Soft light blue
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blueGrey.shade100),
+                          border: Border.all(
+                            color: Color(0xFFB3D4FC),
+                          ), // Light blue border
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,10 +250,29 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
                             // Image Picker Section
                             Row(
                               children: [
-                                ElevatedButton(
+                                TextButton(
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Color(
+                                      0xFFE3F0FF,
+                                    ), // Soft light blue bg
+                                    foregroundColor: Color(
+                                      0xFF004EFF,
+                                    ), // Blue text
+                                    textStyle: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(9),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                  ),
                                   onPressed: () => _pickImage(index),
                                   child: const Text("Add Picture"),
                                 ),
+
                                 const SizedBox(width: 12),
                                 if (cp.image != null)
                                   ClipRRect(
@@ -287,10 +296,17 @@ class _CheckpointScreenState extends State<CheckpointScreen> {
                       child: ElevatedButton(
                         onPressed: _submitChecklist,
                         style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(
+                            0xFF004EFF,
+                          ), // Match header blue
+                          foregroundColor: Colors.white, // White text
                           minimumSize: const Size(160, 45),
                           textStyle: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(9),
                           ),
                         ),
                         child: const Text("Submit"),

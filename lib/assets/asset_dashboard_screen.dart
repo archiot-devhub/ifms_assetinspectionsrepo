@@ -27,14 +27,24 @@ class AssetDashboardScreen extends StatelessWidget {
             ),
           ),
           child: AppBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor:
+                Colors
+                    .transparent, // Gradient from parent container shows through
             elevation: 0,
-            title: const Text(
-              'Asset Management',
-              style: TextStyle(color: Colors.white),
-            ),
-            iconTheme: const IconThemeData(color: Colors.white),
             centerTitle: true,
+            automaticallyImplyLeading:
+                false, // No default back button, so you use your custom one
+            iconTheme: const IconThemeData(
+              color: Colors.white,
+            ), // Makes icons white
+            title: const Text(
+              'Asset Dashboard',
+              style: TextStyle(
+                color: Colors.white, // Title text in white
+                fontWeight: FontWeight.w600, // Bold weight (optional)
+                fontSize: 20, // Adjust size as needed
+              ),
+            ),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () {
@@ -44,7 +54,6 @@ class AssetDashboardScreen extends StatelessWidget {
                 );
               },
             ),
-            automaticallyImplyLeading: false,
           ),
         ),
       ),
@@ -426,7 +435,7 @@ class _RecentActivityPlaceholder extends StatelessWidget {
                   ),
                 ),
               );
-            }).toList(),
+            }),
           ],
         );
       },

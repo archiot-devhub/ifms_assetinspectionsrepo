@@ -7,7 +7,7 @@ import '../maintenance/Breakdown/breakdown_maintenance_screen.dart';
 const Color appBlue = Color(0xFF004EFF);
 
 class MaintenanceDashboardScreen extends StatefulWidget {
-  const MaintenanceDashboardScreen({Key? key}) : super(key: key);
+  const MaintenanceDashboardScreen({super.key});
 
   @override
   _MaintenanceDashboardScreenState createState() =>

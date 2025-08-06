@@ -85,16 +85,38 @@ class _AllAssetsTimelineScreenState extends State<AllAssetsTimelineScreen> {
         }).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Assets Maintenance Timeline"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const AssetDashboardScreen()),
-            );
-          },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: AppBar(
+            title: const Text("Assets Maintenance Timeline"),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white), // Icons color
+            titleTextStyle: const TextStyle(
+              color: Colors.white, // Title color
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AssetDashboardScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
 
@@ -203,8 +225,9 @@ class _AllAssetsTimelineScreenState extends State<AllAssetsTimelineScreen> {
       install = (asset['installationdate'] as Timestamp?)?.toDate();
       elapsed = (asset['elapsedlife'] as Timestamp?)?.toDate();
     } catch (_) {}
-    if (install == null || elapsed == null)
+    if (install == null || elapsed == null) {
       return const Text("Timeline not available.");
+    }
 
     final sortedPPMs = List<Map<String, dynamic>>.from(ppmEvents)..sort((a, b) {
       final dtA = (a['scheduleddate'] as Timestamp).toDate();

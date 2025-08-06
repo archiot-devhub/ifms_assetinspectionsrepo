@@ -154,44 +154,73 @@ class _MaintenanceScheduleScreenState extends State<MaintenanceScheduleScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Scheduled PPMs'),
-        centerTitle: true,
-        elevation: 1,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.calendar_today),
-            tooltip: 'Calendar view',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const MaintenanceCalendarScreen(),
-                ),
-              );
-            },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(
+          kToolbarHeight + 48,
+        ), // 48 for the TabBar
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: () {
-              setState(() => isLoading = true);
-              fetchSchedules();
-            },
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            iconTheme: const IconThemeData(color: Colors.white), // icons white
+            titleTextStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+            title: const Text('Scheduled PPMs'),
+            actions: [
+              IconButton(
+                icon: const Icon(
+                  Icons.calendar_today,
+                  color: Colors.white,
+                ), // icon white
+                tooltip: 'Calendar view',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MaintenanceCalendarScreen(),
+                    ),
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.refresh,
+                  color: Colors.white,
+                ), // icon white
+                tooltip: 'Refresh',
+                onPressed: () {
+                  setState(() => isLoading = true);
+                  fetchSchedules();
+                },
+              ),
+            ],
+            bottom: TabBar(
+              controller: tabController,
+              labelColor: Colors.white, // active tab label color white
+              unselectedLabelColor:
+                  Colors.white60, // unselected tab label color light white
+              indicatorColor: Colors.white, // indicator white
+              tabs: [
+                Tab(text: "Upcoming ($upcomingCount)"),
+                Tab(text: "Overdue ($overdueCount)"),
+                Tab(text: "Completed ($completedCount)"),
+              ],
+            ),
           ),
-        ],
-        bottom: TabBar(
-          controller: tabController,
-          labelColor: Colors.blue,
-          unselectedLabelColor: Colors.grey[600],
-          indicatorColor: Colors.blue,
-          tabs: [
-            Tab(text: "Upcoming ($upcomingCount)"),
-            Tab(text: "Overdue ($overdueCount)"),
-            Tab(text: "Completed ($completedCount)"),
-          ],
         ),
       ),
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(

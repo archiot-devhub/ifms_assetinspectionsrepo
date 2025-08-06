@@ -6,7 +6,6 @@ import 'asset_detail_screen.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:open_file/open_file.dart';
-import 'bulk_upload_asset_screen.dart';
 import 'asset_dashboard_screen.dart';
 import 'dart:io';
 import 'asset_details_qr_scanner_screen.dart';
@@ -434,26 +433,48 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Asset Management'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download),
-            tooltip: 'Export to CSV',
-            onPressed: () async {
-              final snapshot =
-                  await FirebaseFirestore.instance
-                      .collection('AssetRegister')
-                      .get();
-              await _exportToCSV(snapshot.docs);
-            },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Add Asset',
-            onPressed: _showAddAssetPopup,
+          child: AppBar(
+            title: const Text('Asset Management'),
+            backgroundColor: Colors.transparent, // Ensures gradient shows
+            elevation: 0,
+            iconTheme: const IconThemeData(
+              color: Colors.white,
+            ), // Set icons color to white
+            titleTextStyle: const TextStyle(
+              color: Colors.white, // Set title font color to white
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.download),
+                tooltip: 'Export to CSV',
+                onPressed: () async {
+                  final snapshot =
+                      await FirebaseFirestore.instance
+                          .collection('AssetRegister')
+                          .get();
+                  await _exportToCSV(snapshot.docs);
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                tooltip: 'Add Asset',
+                onPressed: _showAddAssetPopup,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -813,6 +834,7 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 1, // 'All Assets' tab is index 1
         type: BottomNavigationBarType.fixed,
+        selectedItemColor: Color(0xFF002F99), // <-- Set selected color here
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
@@ -824,7 +846,7 @@ class _AssetRegisterScreenState extends State<AssetRegisterScreen> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add Asset'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.timeline), // Timeline tab
+            icon: Icon(Icons.timeline),
             label: 'Asset Timeline',
           ),
         ],

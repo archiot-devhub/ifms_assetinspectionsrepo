@@ -9,7 +9,30 @@ class SubmittedCheckpointsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Submitted Checkpoints")),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF004EFF), Color(0xFF002F99)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            iconTheme: const IconThemeData(color: Colors.white),
+            titleTextStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            title: const Text("Submitted Checkpoints"),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: FutureBuilder<QuerySnapshot>(
           future:
@@ -39,12 +62,7 @@ class SubmittedCheckpointsScreen extends StatelessWidget {
                 firstData?['assetName'] ?? firstData?['assetname'] ?? '-';
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(
-                12,
-                12,
-                12,
-                24,
-              ), // Extra bottom padding
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
               children: [
                 // Asset info section
                 Container(
@@ -54,9 +72,9 @@ class SubmittedCheckpointsScreen extends StatelessWidget {
                   ),
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.blueGrey.shade50,
+                    color: const Color(0xFFE3F0FF), // Light blue background
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blueGrey.shade100),
+                    border: Border.all(color: const Color(0xFFB3D4FC)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,22 +84,36 @@ class SubmittedCheckpointsScreen extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Colors.blueGrey.shade700,
+                          color: Color(0xFF004EFF), // Blue to match header
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(assetId, style: const TextStyle(fontSize: 16)),
+                      Text(
+                        assetId,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(
+                            0xFF002F99,
+                          ), // Alternate blue for content
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         "Asset Name:",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Colors.blueGrey.shade700,
+                          color: Color(0xFF004EFF),
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(assetName, style: const TextStyle(fontSize: 16)),
+                      Text(
+                        assetName,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF002F99),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -169,7 +201,7 @@ class SubmittedCheckpointsScreen extends StatelessWidget {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             );
           },
